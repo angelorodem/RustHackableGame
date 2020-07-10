@@ -1,6 +1,0 @@
-include "Status.fbs";
-
-table {
-    status: Status;
-    token: string;
-}

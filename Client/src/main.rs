@@ -43,11 +43,10 @@ struct Player {
     game_scores: Vec<MatchScore>
 }
 
-enum BasicMessage<'a> {
-    SendStartGame,
-    SendChatMessage(String),
-    SendStatus(&'a Player, i32),
-    SendEndGame,
+enum GamePackets<'a> {
+    AskForPlayer(String,String),
+    SendMessage(&'a Player, String),
+    SendScore(&'a Player)
 }
 
 fn get_name() -> (String, String) {
@@ -145,35 +144,6 @@ fn check_guesses(guesses : &Vec<i32>, player : &mut Player, low: &i32, high: &i3
 }
 
 
-fn send_message(message: BasicMessage) {
-    match message {
-        BasicMessage::SendStartGame => {
-            println!("[SDBG] New game");
-        },
-        BasicMessage::SendChatMessage(message) => {
-            println!("[SDBG] Message: {}",message);
-        },
-        BasicMessage::SendEndGame => {
-            println!("[SDBG] End the game");
-        },
-        BasicMessage::SendStatus(player, game_num) => {
-            println!("[SDBG] {} status {} on game {}",player.name.blue().bold(), format!("{:#?}",player).yellow(), game_num);
-        }
-    }
-}
-
-fn wait_for_peers(){
-    println!("[WDBG] Waiting player");
-    send_message(BasicMessage::SendStartGame);
-
-    // check if there is messages
-
-}
-
-fn send_chat_message(){
-    let message = String::from("Hello!");
-    send_message(BasicMessage::SendChatMessage(message));
-}
 
 
 fn main() {  
@@ -196,8 +166,6 @@ fn main() {
         total_score : 0,
         game_scores : Vec::new()        
     };
-
-    wait_for_peers();
     
     let mut count : i32 = 0;
 
@@ -224,14 +192,6 @@ fn main() {
     println!("Games score!: {}", &player.total_score);
 
 
-
-    send_message(BasicMessage::SendStatus(&player, games));
-    send_chat_message();
-    send_message(BasicMessage::SendEndGame);
-
-    // let  test = [1,2,3,5,6];
-    // let ret : Vec<i32> = test.into_iter().map(|x| x+1).collect();
-    // println!("{:?}",ret);
 
 
 }

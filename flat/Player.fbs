@@ -1,7 +1,0 @@
-table Player {
-    id: uint32;
-    name: string;
-    total_store: int32;
-    auth_token: string;
-    password: string;
-}
