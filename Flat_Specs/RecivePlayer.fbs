@@ -1,0 +1,9 @@
+include "Status.fbs";
+include "Player.fbs";
+
+table RecivePlayer {
+    status: Status;
+    player: Player;
+}
+
+root_type RecivePlayer;

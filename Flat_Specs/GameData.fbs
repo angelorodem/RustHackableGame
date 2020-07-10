@@ -1,0 +1,8 @@
+table GameData {
+   motd: string;
+   low : uint32;
+   high: uint32;
+   games: uint32;    
+}
+
+root_type GameData;

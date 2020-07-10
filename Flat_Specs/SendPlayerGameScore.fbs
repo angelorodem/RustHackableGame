@@ -1,0 +1,11 @@
+include "Player.fbs";
+include "Status.fbs";
+include "GameResult.fbs";
+
+table SendGameScore {
+    player: Player;
+    game_result: GameResult;
+    score_message: string;
+}
+
+root_type SendGameScore;

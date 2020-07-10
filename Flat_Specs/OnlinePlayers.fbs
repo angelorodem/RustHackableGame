@@ -1,0 +1,7 @@
+include "Player.fbs";
+
+table OnlinePlayers {
+    player: [Player];
+}
+
+root_type OnlinePlayers;

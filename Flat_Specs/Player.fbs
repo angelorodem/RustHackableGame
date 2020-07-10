@@ -1,0 +1,8 @@
+table Player {
+    id: uint32;
+    name: string (required);
+    auth_token: string;
+    password: string;
+}
+
+root_type Player;

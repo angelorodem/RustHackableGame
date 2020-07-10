@@ -1,0 +1,8 @@
+enum Status : byte {
+    Ok,
+    OkNew,
+    OkLogin,
+    Denied,
+    Failure,
+    Invalid
+}
