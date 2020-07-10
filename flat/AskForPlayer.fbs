@@ -1,0 +1,8 @@
+include "Player.fbs";
+
+table AskForPlayer {
+    name: string;
+    password: string;
+}
+
+root_type AskForPlayer;

@@ -1,0 +1,11 @@
+include "Player.fbs";
+
+enum Color:byte { Red = 0, Green = 1, Blue = 2}
+
+table SendMessage {
+    text: string;
+    color: Color;
+    from: Player;
+}
+
+root_type SendMessage;
