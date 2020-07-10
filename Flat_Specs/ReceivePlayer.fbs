@@ -1,5 +1,11 @@
-include "Status.fbs";
 include "Player.fbs";
+
+enum Status : byte {
+    OkNew,
+    OkLogin,
+    Denied,
+    Failure
+}
 
 table RecivePlayer {
     status: Status;

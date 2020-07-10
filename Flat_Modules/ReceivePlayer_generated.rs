@@ -3,12 +3,77 @@
 
 
 use crate::Player_generated::*;
-use crate::Status_generated::*;
 use std::mem;
 use std::cmp::Ordering;
 
 extern crate flatbuffers;
 use self::flatbuffers::EndianScalar;
+
+#[allow(non_camel_case_types)]
+#[repr(i8)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Status {
+  OkNew = 0,
+  OkLogin = 1,
+  Denied = 2,
+  Failure = 3,
+
+}
+
+pub const ENUM_MIN_STATUS: i8 = 0;
+pub const ENUM_MAX_STATUS: i8 = 3;
+
+impl<'a> flatbuffers::Follow<'a> for Status {
+  type Inner = Self;
+  #[inline]
+  fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    flatbuffers::read_scalar_at::<Self>(buf, loc)
+  }
+}
+
+impl flatbuffers::EndianScalar for Status {
+  #[inline]
+  fn to_little_endian(self) -> Self {
+    let n = i8::to_le(self as i8);
+    let p = &n as *const i8 as *const Status;
+    unsafe { *p }
+  }
+  #[inline]
+  fn from_little_endian(self) -> Self {
+    let n = i8::from_le(self as i8);
+    let p = &n as *const i8 as *const Status;
+    unsafe { *p }
+  }
+}
+
+impl flatbuffers::Push for Status {
+    type Output = Status;
+    #[inline]
+    fn push(&self, dst: &mut [u8], _rest: &[u8]) {
+        flatbuffers::emplace_scalar::<Status>(dst, *self);
+    }
+}
+
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_STATUS:[Status; 4] = [
+  Status::OkNew,
+  Status::OkLogin,
+  Status::Denied,
+  Status::Failure
+];
+
+#[allow(non_camel_case_types)]
+pub const ENUM_NAMES_STATUS:[&'static str; 4] = [
+    "OkNew",
+    "OkLogin",
+    "Denied",
+    "Failure"
+];
+
+pub fn enum_name_status(e: Status) -> &'static str {
+  let index = e as i8;
+  ENUM_NAMES_STATUS[index as usize]
+}
 
 pub enum RecivePlayerOffset {}
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -49,7 +114,7 @@ impl<'a> RecivePlayer<'a> {
 
   #[inline]
   pub fn status(&self) -> Status {
-    self._tab.get::<Status>(RecivePlayer::VT_STATUS, Some(Status::Ok)).unwrap()
+    self._tab.get::<Status>(RecivePlayer::VT_STATUS, Some(Status::OkNew)).unwrap()
   }
   #[inline]
   pub fn player(&self) -> Option<Player<'a>> {
@@ -65,7 +130,7 @@ impl<'a> Default for RecivePlayerArgs<'a> {
     #[inline]
     fn default() -> Self {
         RecivePlayerArgs {
-            status: Status::Ok,
+            status: Status::OkNew,
             player: None,
         }
     }
@@ -77,7 +142,7 @@ pub struct RecivePlayerBuilder<'a: 'b, 'b> {
 impl<'a: 'b, 'b> RecivePlayerBuilder<'a, 'b> {
   #[inline]
   pub fn add_status(&mut self, status: Status) {
-    self.fbb_.push_slot::<Status>(RecivePlayer::VT_STATUS, status, Status::Ok);
+    self.fbb_.push_slot::<Status>(RecivePlayer::VT_STATUS, status, Status::OkNew);
   }
   #[inline]
   pub fn add_player(&mut self, player: flatbuffers::WIPOffset<Player<'b >>) {

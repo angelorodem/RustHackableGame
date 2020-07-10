@@ -22,35 +22,38 @@ multiple Modules
 
 */
 
+#[path = "../../Flat_Modules/AskForPlayer_generated.rs"]
+mod AskForPlayer_generated;
+#[path = "../../Flat_Modules/GameData_generated.rs"]
+mod GameData_generated;
+#[path = "../../Flat_Modules/GameResult_generated.rs"]
+mod GameResult_generated;
+#[path = "../../Flat_Modules/Message_generated.rs"]
+mod Message_generated;
+#[path = "../../Flat_Modules/OnlinePlayers_generated.rs"]
+mod OnlinePlayers_generated;
+#[path = "../../Flat_Modules/Player_generated.rs"]
+mod Player_generated;
+#[path = "../../Flat_Modules/ReceivePlayer_generated.rs"]
+mod ReceivePlayer_generated;
+#[path = "../../Flat_Modules/SendPlayerGameScore_generated.rs"]
+mod SendPlayerGameScore_generated;
+
+mod networking;
+mod structures;
+
+extern crate flatbuffers;
+pub use crate::structures::Structures::*;
+pub use crate::networking::GameNetworking;
+
 use colored::*;
 use rand::Rng;
 use std::io;
 
-#[derive(Debug)]
-struct MatchScore {
-    hits: i32,
-    specials: i32,
-    misses: i32,
-    score: i32
-}
 
-//This need better DOP
-#[derive(Debug)]
-struct Player {
-    name: String,
-    nick: String,
-    total_score: i32,
-    game_scores: Vec<MatchScore>
-}
-
-enum GamePackets<'a> {
-    AskForPlayer(String,String),
-    SendMessage(&'a Player, String),
-    SendScore(&'a Player)
-}
-
-fn get_name() -> (String, String) {
+fn get_login() -> (String, String) {
     let mut name: String = String::new();
+    let mut password: String = String::new();
 
     println!("{}","Please insert your name!".yellow());
     
@@ -58,12 +61,21 @@ fn get_name() -> (String, String) {
     let name = name.trim();
 
     if name.len() < 3 {
-        panic!("{}{}","I bet your name is not this short".red(),", try again".green().bold());
+        panic!("{}{}","I bet your name is not this short,".red()," try again".green().bold());
     }
 
-    let nick = String::from(&name[..3]);
+    println!("Hello [ {} ] {}",&name.red().bold(),"Please insert your password!".yellow());
+    
+    io::stdin().read_line(&mut password).expect("Expected string.");
+    let password = password.trim();
 
-    (name.to_string(), nick)
+    if password.len() < 3 {
+        panic!("{}{}","Use a stronger password please,".red()," try again".green().bold());
+    }
+
+    
+
+    (name.to_string(), password.to_string())
 }
 
 
@@ -76,7 +88,7 @@ fn get_guesses(low: &i32, high: &i32) -> Result<Vec<i32>,()> {
     let str_numbers : Vec<&str> = str_input.trim().split(" ").collect();
 
     if str_numbers.len() != 5 { 
-        println!("{}{}","Oh no, i hope you can count to 5, like... just use your fingers bro".red(),", try again".green().bold());
+        println!("{}{}","Oh no, i hope you can count to 5, like... just use your fingers bro,".red()," try again".green().bold());
         return Err(());
     }
 
@@ -92,8 +104,8 @@ fn get_guesses(low: &i32, high: &i32) -> Result<Vec<i32>,()> {
         let n = n.unwrap();
 
         if n < *low || n >= *high {
-            println!("{}{}",format!("Oh no no, the number should be bigger than {} and lower than {}",low,high).red().bold(),
-            ", try again".green().bold());
+            println!("{}{}",format!("Oh no no, the number should be bigger than {} and lower than {},",low,high).red().bold(),
+            " try again".green().bold());
             return Err(());
         }
         guesses.push(n);
@@ -138,7 +150,6 @@ fn check_guesses(guesses : &Vec<i32>, player : &mut Player, low: &i32, high: &i3
         sum +1 
     };
 
-    player.total_score += match_score.score;
     player.game_scores.push(match_score);
     
 }
@@ -149,21 +160,20 @@ fn check_guesses(guesses : &Vec<i32>, player : &mut Player, low: &i32, high: &i3
 fn main() {  
     println!("Welcome to the Online {} Gambling game!", "Hackable".black());
     
-    let (name, nick) = get_name();
+    let (name, password) = get_login();
     let games = 3;
     let low = 1;
     let high = 7;
     
+    GameNetworking::hello();
 
-    println!("\n\n {}, {} ({})","Hello".green(),name.red(),nick.red().bold());
+    println!("\n\n {}, {}","Hello".green(),name.red());
     println!("{} {} {}","We will play".yellow() ,games,"rounds of Guess the number! (With special numbers)".yellow());
     println!("For each round, you have to guess 5 random numbers from {} in sequence,
      \ntry guessing by inputting 5 numbers separated by space!", format!("{}-{}",low,high-1).red().bold());
 
     let mut player = Player {
         name,
-        nick,
-        total_score : 0,
         game_scores : Vec::new()        
     };
     
@@ -189,7 +199,7 @@ fn main() {
         println!("Round: {} | Hits: {} Espc: {} Miss: {} -- Round Score: {}",i,&x.hits,&x.specials,&x.misses,&x.score);
     });
 
-    println!("Games score!: {}", &player.total_score);
+    //println!("Games score!: {}", &player.total_score);
 
 
 
