@@ -1,0 +1,23 @@
+include "AskForPlayer.fbs";
+include "GameData.fbs";
+include "GameResult.fbs";
+include "Message.fbs";
+include "OnlinePlayers.fbs";
+include "Player.fbs";
+include "ReceivePlayer.fbs";
+include "SendPlayerGameScore.fbs";
+
+union Data {
+    AskForPlayer, GameData, Message, OnlinePlayers, ReceivePlayer, SendGameScore
+}
+
+enum PacketType : uint8 {
+    ASKFORPLAYER, GAMEDATA, MESSAGE, ONLINEPLAYERS, RECEIVEPLAYER, SENDGAMESCORE
+}
+
+table GanericPacket {
+    type: PacketType;
+    data: Data;
+}
+
+root_type GanericPacket;

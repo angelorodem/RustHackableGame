@@ -1,15 +1,15 @@
 include "Player.fbs";
 
-enum Status : byte {
+enum StatusReceivePlayer : byte {
     OkNew,
     OkLogin,
     Denied,
     Failure
 }
 
-table RecivePlayer {
-    status: Status;
+table ReceivePlayer {
+    status: StatusReceivePlayer;
     player: Player;
 }
 
-root_type RecivePlayer;
+root_type ReceivePlayer;

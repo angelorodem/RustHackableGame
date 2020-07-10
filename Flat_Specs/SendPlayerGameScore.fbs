@@ -1,7 +1,7 @@
 include "Player.fbs";
 include "GameResult.fbs";
 
-enum Status : byte {
+enum StatusGameScore : byte {
     Ok,
     Fail
 }
@@ -10,7 +10,7 @@ table SendGameScore {
     player: Player;
     game_result: GameResult;
     score_message: string;
-    status: Status;
+    status: StatusGameScore;
 }
 
 root_type SendGameScore;

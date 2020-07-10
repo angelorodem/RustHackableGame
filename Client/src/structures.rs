@@ -12,10 +12,4 @@ pub mod Structures {
         pub name: String,
         pub game_scores: Vec<MatchScore>
     }
-
-    pub enum GamePackets<'a> {
-        AskForPlayer(String,String),
-        SendMessage(&'a Player, String),
-        SendScore(&'a Player)
-    }
 }

@@ -12,7 +12,7 @@ use self::flatbuffers::EndianScalar;
 #[allow(non_camel_case_types)]
 #[repr(i8)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub enum Status {
+pub enum StatusReceivePlayer {
   OkNew = 0,
   OkLogin = 1,
   Denied = 2,
@@ -20,10 +20,10 @@ pub enum Status {
 
 }
 
-pub const ENUM_MIN_STATUS: i8 = 0;
-pub const ENUM_MAX_STATUS: i8 = 3;
+pub const ENUM_MIN_STATUS_RECEIVE_PLAYER: i8 = 0;
+pub const ENUM_MAX_STATUS_RECEIVE_PLAYER: i8 = 3;
 
-impl<'a> flatbuffers::Follow<'a> for Status {
+impl<'a> flatbuffers::Follow<'a> for StatusReceivePlayer {
   type Inner = Self;
   #[inline]
   fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
@@ -31,59 +31,59 @@ impl<'a> flatbuffers::Follow<'a> for Status {
   }
 }
 
-impl flatbuffers::EndianScalar for Status {
+impl flatbuffers::EndianScalar for StatusReceivePlayer {
   #[inline]
   fn to_little_endian(self) -> Self {
     let n = i8::to_le(self as i8);
-    let p = &n as *const i8 as *const Status;
+    let p = &n as *const i8 as *const StatusReceivePlayer;
     unsafe { *p }
   }
   #[inline]
   fn from_little_endian(self) -> Self {
     let n = i8::from_le(self as i8);
-    let p = &n as *const i8 as *const Status;
+    let p = &n as *const i8 as *const StatusReceivePlayer;
     unsafe { *p }
   }
 }
 
-impl flatbuffers::Push for Status {
-    type Output = Status;
+impl flatbuffers::Push for StatusReceivePlayer {
+    type Output = StatusReceivePlayer;
     #[inline]
     fn push(&self, dst: &mut [u8], _rest: &[u8]) {
-        flatbuffers::emplace_scalar::<Status>(dst, *self);
+        flatbuffers::emplace_scalar::<StatusReceivePlayer>(dst, *self);
     }
 }
 
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_STATUS:[Status; 4] = [
-  Status::OkNew,
-  Status::OkLogin,
-  Status::Denied,
-  Status::Failure
+pub const ENUM_VALUES_STATUS_RECEIVE_PLAYER:[StatusReceivePlayer; 4] = [
+  StatusReceivePlayer::OkNew,
+  StatusReceivePlayer::OkLogin,
+  StatusReceivePlayer::Denied,
+  StatusReceivePlayer::Failure
 ];
 
 #[allow(non_camel_case_types)]
-pub const ENUM_NAMES_STATUS:[&'static str; 4] = [
+pub const ENUM_NAMES_STATUS_RECEIVE_PLAYER:[&'static str; 4] = [
     "OkNew",
     "OkLogin",
     "Denied",
     "Failure"
 ];
 
-pub fn enum_name_status(e: Status) -> &'static str {
+pub fn enum_name_status_receive_player(e: StatusReceivePlayer) -> &'static str {
   let index = e as i8;
-  ENUM_NAMES_STATUS[index as usize]
+  ENUM_NAMES_STATUS_RECEIVE_PLAYER[index as usize]
 }
 
-pub enum RecivePlayerOffset {}
+pub enum ReceivePlayerOffset {}
 #[derive(Copy, Clone, Debug, PartialEq)]
 
-pub struct RecivePlayer<'a> {
+pub struct ReceivePlayer<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for RecivePlayer<'a> {
-    type Inner = RecivePlayer<'a>;
+impl<'a> flatbuffers::Follow<'a> for ReceivePlayer<'a> {
+    type Inner = ReceivePlayer<'a>;
     #[inline]
     fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         Self {
@@ -92,18 +92,18 @@ impl<'a> flatbuffers::Follow<'a> for RecivePlayer<'a> {
     }
 }
 
-impl<'a> RecivePlayer<'a> {
+impl<'a> ReceivePlayer<'a> {
     #[inline]
     pub fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-        RecivePlayer {
+        ReceivePlayer {
             _tab: table,
         }
     }
     #[allow(unused_mut)]
     pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
-        args: &'args RecivePlayerArgs<'args>) -> flatbuffers::WIPOffset<RecivePlayer<'bldr>> {
-      let mut builder = RecivePlayerBuilder::new(_fbb);
+        args: &'args ReceivePlayerArgs<'args>) -> flatbuffers::WIPOffset<ReceivePlayer<'bldr>> {
+      let mut builder = ReceivePlayerBuilder::new(_fbb);
       if let Some(x) = args.player { builder.add_player(x); }
       builder.add_status(args.status);
       builder.finish()
@@ -113,74 +113,74 @@ impl<'a> RecivePlayer<'a> {
     pub const VT_PLAYER: flatbuffers::VOffsetT = 6;
 
   #[inline]
-  pub fn status(&self) -> Status {
-    self._tab.get::<Status>(RecivePlayer::VT_STATUS, Some(Status::OkNew)).unwrap()
+  pub fn status(&self) -> StatusReceivePlayer {
+    self._tab.get::<StatusReceivePlayer>(ReceivePlayer::VT_STATUS, Some(StatusReceivePlayer::OkNew)).unwrap()
   }
   #[inline]
   pub fn player(&self) -> Option<Player<'a>> {
-    self._tab.get::<flatbuffers::ForwardsUOffset<Player<'a>>>(RecivePlayer::VT_PLAYER, None)
+    self._tab.get::<flatbuffers::ForwardsUOffset<Player<'a>>>(ReceivePlayer::VT_PLAYER, None)
   }
 }
 
-pub struct RecivePlayerArgs<'a> {
-    pub status: Status,
+pub struct ReceivePlayerArgs<'a> {
+    pub status: StatusReceivePlayer,
     pub player: Option<flatbuffers::WIPOffset<Player<'a >>>,
 }
-impl<'a> Default for RecivePlayerArgs<'a> {
+impl<'a> Default for ReceivePlayerArgs<'a> {
     #[inline]
     fn default() -> Self {
-        RecivePlayerArgs {
-            status: Status::OkNew,
+        ReceivePlayerArgs {
+            status: StatusReceivePlayer::OkNew,
             player: None,
         }
     }
 }
-pub struct RecivePlayerBuilder<'a: 'b, 'b> {
+pub struct ReceivePlayerBuilder<'a: 'b, 'b> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b> RecivePlayerBuilder<'a, 'b> {
+impl<'a: 'b, 'b> ReceivePlayerBuilder<'a, 'b> {
   #[inline]
-  pub fn add_status(&mut self, status: Status) {
-    self.fbb_.push_slot::<Status>(RecivePlayer::VT_STATUS, status, Status::OkNew);
+  pub fn add_status(&mut self, status: StatusReceivePlayer) {
+    self.fbb_.push_slot::<StatusReceivePlayer>(ReceivePlayer::VT_STATUS, status, StatusReceivePlayer::OkNew);
   }
   #[inline]
   pub fn add_player(&mut self, player: flatbuffers::WIPOffset<Player<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Player>>(RecivePlayer::VT_PLAYER, player);
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Player>>(ReceivePlayer::VT_PLAYER, player);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> RecivePlayerBuilder<'a, 'b> {
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> ReceivePlayerBuilder<'a, 'b> {
     let start = _fbb.start_table();
-    RecivePlayerBuilder {
+    ReceivePlayerBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<RecivePlayer<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<ReceivePlayer<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
 #[inline]
-pub fn get_root_as_recive_player<'a>(buf: &'a [u8]) -> RecivePlayer<'a> {
-  flatbuffers::get_root::<RecivePlayer<'a>>(buf)
+pub fn get_root_as_receive_player<'a>(buf: &'a [u8]) -> ReceivePlayer<'a> {
+  flatbuffers::get_root::<ReceivePlayer<'a>>(buf)
 }
 
 #[inline]
-pub fn get_size_prefixed_root_as_recive_player<'a>(buf: &'a [u8]) -> RecivePlayer<'a> {
-  flatbuffers::get_size_prefixed_root::<RecivePlayer<'a>>(buf)
+pub fn get_size_prefixed_root_as_receive_player<'a>(buf: &'a [u8]) -> ReceivePlayer<'a> {
+  flatbuffers::get_size_prefixed_root::<ReceivePlayer<'a>>(buf)
 }
 
 #[inline]
-pub fn finish_recive_player_buffer<'a, 'b>(
+pub fn finish_receive_player_buffer<'a, 'b>(
     fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>,
-    root: flatbuffers::WIPOffset<RecivePlayer<'a>>) {
+    root: flatbuffers::WIPOffset<ReceivePlayer<'a>>) {
   fbb.finish(root, None);
 }
 
 #[inline]
-pub fn finish_size_prefixed_recive_player_buffer<'a, 'b>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>, root: flatbuffers::WIPOffset<RecivePlayer<'a>>) {
+pub fn finish_size_prefixed_receive_player_buffer<'a, 'b>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>, root: flatbuffers::WIPOffset<ReceivePlayer<'a>>) {
   fbb.finish_size_prefixed(root, None);
 }

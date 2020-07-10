@@ -165,7 +165,7 @@ fn main() {
     let low = 1;
     let high = 7;
     
-    GameNetworking::hello();
+    GameNetworking::ask_for_player(&name, &password);
 
     println!("\n\n {}, {}","Hello".green(),name.red());
     println!("{} {} {}","We will play".yellow() ,games,"rounds of Guess the number! (With special numbers)".yellow());
