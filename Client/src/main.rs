@@ -21,6 +21,7 @@ iterator for each, map, collect, filter, enumerate
 multiple Modules
 
 */
+#[allow(non_snake_case)]
 
 #[path = "../../Flat_Modules/AskForPlayer_generated.rs"]
 mod AskForPlayer_generated;
@@ -38,13 +39,18 @@ mod Player_generated;
 mod ReceivePlayer_generated;
 #[path = "../../Flat_Modules/SendPlayerGameScore_generated.rs"]
 mod SendPlayerGameScore_generated;
+#[path = "../../Flat_Modules/GenericPacket_generated.rs"]
+mod GenericPacket_generated;
 
+#[path = "../../networking.rs"]
 mod networking;
+#[path = "../../structures.rs"]
 mod structures;
 
 extern crate flatbuffers;
-pub use crate::structures::Structures::*;
+pub use crate::structures::Structures;
 pub use crate::networking::GameNetworking;
+
 
 use colored::*;
 use rand::Rng;
@@ -115,10 +121,10 @@ fn get_guesses(low: &i32, high: &i32) -> Result<Vec<i32>,()> {
 }
 
 
-fn check_guesses(guesses : &Vec<i32>, player : &mut Player, low: &i32, high: &i32){
+fn check_guesses(guesses : &Vec<i32>, player : &mut Structures::Player, low: &i32, high: &i32){
     let mut rng = rand::thread_rng();
     
-    let mut match_score = MatchScore {
+    let mut match_score = Structures::MatchScore {
         hits : 0,
         specials: 0,
         misses: 0,
@@ -150,7 +156,10 @@ fn check_guesses(guesses : &Vec<i32>, player : &mut Player, low: &i32, high: &i3
         sum +1 
     };
 
-    player.game_scores.push(match_score);
+    player.game_score.hits += match_score.hits;
+    player.game_score.misses += match_score.misses;
+    player.game_score.score += match_score.score;
+    player.game_score.specials += match_score.specials;
     
 }
 
@@ -172,10 +181,12 @@ fn main() {
     println!("For each round, you have to guess 5 random numbers from {} in sequence,
      \ntry guessing by inputting 5 numbers separated by space!", format!("{}-{}",low,high-1).red().bold());
 
-    let mut player = Player {
+    let mut player = Structures::Player {
         name,
-        game_scores : Vec::new()        
+        ..Default::default()   
     };
+
+    GameNetworking::send_message(&player, String::from("Wow"), Structures::Color::Red);
     
     let mut count : i32 = 0;
 
@@ -194,14 +205,13 @@ fn main() {
         count += 1;
     }
 
-    
-    player.game_scores.iter().enumerate().for_each(|(i,x)| {
-        println!("Round: {} | Hits: {} Espc: {} Miss: {} -- Round Score: {}",i,&x.hits,&x.specials,&x.misses,&x.score);
-    });
+
+    println!("End - Hits: {} Espc: {} Miss: {} -- Game Score: {}",&player.game_score.hits,
+    &player.game_score.specials,&player.game_score.misses,&player.game_score.score);
 
     //println!("Games score!: {}", &player.total_score);
 
-
+    GameNetworking::send_score(&player, String::from("Wow"));
 
 
 }

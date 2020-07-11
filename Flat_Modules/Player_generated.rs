@@ -40,19 +40,13 @@ impl<'a> Player<'a> {
       if let Some(x) = args.password { builder.add_password(x); }
       if let Some(x) = args.auth_token { builder.add_auth_token(x); }
       if let Some(x) = args.name { builder.add_name(x); }
-      builder.add_id(args.id);
       builder.finish()
     }
 
-    pub const VT_ID: flatbuffers::VOffsetT = 4;
-    pub const VT_NAME: flatbuffers::VOffsetT = 6;
-    pub const VT_AUTH_TOKEN: flatbuffers::VOffsetT = 8;
-    pub const VT_PASSWORD: flatbuffers::VOffsetT = 10;
+    pub const VT_NAME: flatbuffers::VOffsetT = 4;
+    pub const VT_AUTH_TOKEN: flatbuffers::VOffsetT = 6;
+    pub const VT_PASSWORD: flatbuffers::VOffsetT = 8;
 
-  #[inline]
-  pub fn id(&self) -> u32 {
-    self._tab.get::<u32>(Player::VT_ID, Some(0)).unwrap()
-  }
   #[inline]
   pub fn name(&self) -> &'a str {
     self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(Player::VT_NAME, None).unwrap()
@@ -68,7 +62,6 @@ impl<'a> Player<'a> {
 }
 
 pub struct PlayerArgs<'a> {
-    pub id: u32,
     pub name: Option<flatbuffers::WIPOffset<&'a  str>>,
     pub auth_token: Option<flatbuffers::WIPOffset<&'a  str>>,
     pub password: Option<flatbuffers::WIPOffset<&'a  str>>,
@@ -77,7 +70,6 @@ impl<'a> Default for PlayerArgs<'a> {
     #[inline]
     fn default() -> Self {
         PlayerArgs {
-            id: 0,
             name: None, // required field
             auth_token: None,
             password: None,
@@ -89,10 +81,6 @@ pub struct PlayerBuilder<'a: 'b, 'b> {
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
 impl<'a: 'b, 'b> PlayerBuilder<'a, 'b> {
-  #[inline]
-  pub fn add_id(&mut self, id: u32) {
-    self.fbb_.push_slot::<u32>(Player::VT_ID, id, 0);
-  }
   #[inline]
   pub fn add_name(&mut self, name: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Player::VT_NAME, name);

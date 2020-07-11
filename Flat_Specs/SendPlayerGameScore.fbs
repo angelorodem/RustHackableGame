@@ -1,16 +1,10 @@
 include "Player.fbs";
 include "GameResult.fbs";
 
-enum StatusGameScore : byte {
-    Ok,
-    Fail
-}
-
 table SendGameScore {
     player: Player;
     game_result: GameResult;
     score_message: string;
-    status: StatusGameScore;
 }
 
 root_type SendGameScore;

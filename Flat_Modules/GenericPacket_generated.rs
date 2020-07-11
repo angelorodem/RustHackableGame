@@ -92,87 +92,15 @@ pub fn enum_name_data(e: Data) -> &'static str {
 }
 
 pub struct DataUnionTableOffset {}
-#[allow(non_camel_case_types)]
-#[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub enum PacketType {
-  ASKFORPLAYER = 0,
-  GAMEDATA = 1,
-  MESSAGE = 2,
-  ONLINEPLAYERS = 3,
-  RECEIVEPLAYER = 4,
-  SENDGAMESCORE = 5,
-
-}
-
-pub const ENUM_MIN_PACKET_TYPE: u8 = 0;
-pub const ENUM_MAX_PACKET_TYPE: u8 = 5;
-
-impl<'a> flatbuffers::Follow<'a> for PacketType {
-  type Inner = Self;
-  #[inline]
-  fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    flatbuffers::read_scalar_at::<Self>(buf, loc)
-  }
-}
-
-impl flatbuffers::EndianScalar for PacketType {
-  #[inline]
-  fn to_little_endian(self) -> Self {
-    let n = u8::to_le(self as u8);
-    let p = &n as *const u8 as *const PacketType;
-    unsafe { *p }
-  }
-  #[inline]
-  fn from_little_endian(self) -> Self {
-    let n = u8::from_le(self as u8);
-    let p = &n as *const u8 as *const PacketType;
-    unsafe { *p }
-  }
-}
-
-impl flatbuffers::Push for PacketType {
-    type Output = PacketType;
-    #[inline]
-    fn push(&self, dst: &mut [u8], _rest: &[u8]) {
-        flatbuffers::emplace_scalar::<PacketType>(dst, *self);
-    }
-}
-
-#[allow(non_camel_case_types)]
-pub const ENUM_VALUES_PACKET_TYPE:[PacketType; 6] = [
-  PacketType::ASKFORPLAYER,
-  PacketType::GAMEDATA,
-  PacketType::MESSAGE,
-  PacketType::ONLINEPLAYERS,
-  PacketType::RECEIVEPLAYER,
-  PacketType::SENDGAMESCORE
-];
-
-#[allow(non_camel_case_types)]
-pub const ENUM_NAMES_PACKET_TYPE:[&'static str; 6] = [
-    "ASKFORPLAYER",
-    "GAMEDATA",
-    "MESSAGE",
-    "ONLINEPLAYERS",
-    "RECEIVEPLAYER",
-    "SENDGAMESCORE"
-];
-
-pub fn enum_name_packet_type(e: PacketType) -> &'static str {
-  let index = e as u8;
-  ENUM_NAMES_PACKET_TYPE[index as usize]
-}
-
-pub enum GanericPacketOffset {}
+pub enum GenericPacketOffset {}
 #[derive(Copy, Clone, Debug, PartialEq)]
 
-pub struct GanericPacket<'a> {
+pub struct GenericPacket<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for GanericPacket<'a> {
-    type Inner = GanericPacket<'a>;
+impl<'a> flatbuffers::Follow<'a> for GenericPacket<'a> {
+    type Inner = GenericPacket<'a>;
     #[inline]
     fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         Self {
@@ -181,39 +109,33 @@ impl<'a> flatbuffers::Follow<'a> for GanericPacket<'a> {
     }
 }
 
-impl<'a> GanericPacket<'a> {
+impl<'a> GenericPacket<'a> {
     #[inline]
     pub fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-        GanericPacket {
+        GenericPacket {
             _tab: table,
         }
     }
     #[allow(unused_mut)]
     pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
-        args: &'args GanericPacketArgs) -> flatbuffers::WIPOffset<GanericPacket<'bldr>> {
-      let mut builder = GanericPacketBuilder::new(_fbb);
+        args: &'args GenericPacketArgs) -> flatbuffers::WIPOffset<GenericPacket<'bldr>> {
+      let mut builder = GenericPacketBuilder::new(_fbb);
       if let Some(x) = args.data { builder.add_data(x); }
       builder.add_data_type(args.data_type);
-      builder.add_type_(args.type_);
       builder.finish()
     }
 
-    pub const VT_TYPE_: flatbuffers::VOffsetT = 4;
-    pub const VT_DATA_TYPE: flatbuffers::VOffsetT = 6;
-    pub const VT_DATA: flatbuffers::VOffsetT = 8;
+    pub const VT_DATA_TYPE: flatbuffers::VOffsetT = 4;
+    pub const VT_DATA: flatbuffers::VOffsetT = 6;
 
   #[inline]
-  pub fn type_(&self) -> PacketType {
-    self._tab.get::<PacketType>(GanericPacket::VT_TYPE_, Some(PacketType::ASKFORPLAYER)).unwrap()
-  }
-  #[inline]
   pub fn data_type(&self) -> Data {
-    self._tab.get::<Data>(GanericPacket::VT_DATA_TYPE, Some(Data::NONE)).unwrap()
+    self._tab.get::<Data>(GenericPacket::VT_DATA_TYPE, Some(Data::NONE)).unwrap()
   }
   #[inline]
   pub fn data(&self) -> Option<flatbuffers::Table<'a>> {
-    self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(GanericPacket::VT_DATA, None)
+    self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(GenericPacket::VT_DATA, None)
   }
   #[inline]
   #[allow(non_snake_case)]
@@ -277,71 +199,65 @@ impl<'a> GanericPacket<'a> {
 
 }
 
-pub struct GanericPacketArgs {
-    pub type_: PacketType,
+pub struct GenericPacketArgs {
     pub data_type: Data,
     pub data: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
 }
-impl<'a> Default for GanericPacketArgs {
+impl<'a> Default for GenericPacketArgs {
     #[inline]
     fn default() -> Self {
-        GanericPacketArgs {
-            type_: PacketType::ASKFORPLAYER,
+        GenericPacketArgs {
             data_type: Data::NONE,
             data: None,
         }
     }
 }
-pub struct GanericPacketBuilder<'a: 'b, 'b> {
+pub struct GenericPacketBuilder<'a: 'b, 'b> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b> GanericPacketBuilder<'a, 'b> {
-  #[inline]
-  pub fn add_type_(&mut self, type_: PacketType) {
-    self.fbb_.push_slot::<PacketType>(GanericPacket::VT_TYPE_, type_, PacketType::ASKFORPLAYER);
-  }
+impl<'a: 'b, 'b> GenericPacketBuilder<'a, 'b> {
   #[inline]
   pub fn add_data_type(&mut self, data_type: Data) {
-    self.fbb_.push_slot::<Data>(GanericPacket::VT_DATA_TYPE, data_type, Data::NONE);
+    self.fbb_.push_slot::<Data>(GenericPacket::VT_DATA_TYPE, data_type, Data::NONE);
   }
   #[inline]
   pub fn add_data(&mut self, data: flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(GanericPacket::VT_DATA, data);
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(GenericPacket::VT_DATA, data);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> GanericPacketBuilder<'a, 'b> {
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> GenericPacketBuilder<'a, 'b> {
     let start = _fbb.start_table();
-    GanericPacketBuilder {
+    GenericPacketBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<GanericPacket<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<GenericPacket<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
 #[inline]
-pub fn get_root_as_ganeric_packet<'a>(buf: &'a [u8]) -> GanericPacket<'a> {
-  flatbuffers::get_root::<GanericPacket<'a>>(buf)
+pub fn get_root_as_generic_packet<'a>(buf: &'a [u8]) -> GenericPacket<'a> {
+  flatbuffers::get_root::<GenericPacket<'a>>(buf)
 }
 
 #[inline]
-pub fn get_size_prefixed_root_as_ganeric_packet<'a>(buf: &'a [u8]) -> GanericPacket<'a> {
-  flatbuffers::get_size_prefixed_root::<GanericPacket<'a>>(buf)
+pub fn get_size_prefixed_root_as_generic_packet<'a>(buf: &'a [u8]) -> GenericPacket<'a> {
+  flatbuffers::get_size_prefixed_root::<GenericPacket<'a>>(buf)
 }
 
 #[inline]
-pub fn finish_ganeric_packet_buffer<'a, 'b>(
+pub fn finish_generic_packet_buffer<'a, 'b>(
     fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>,
-    root: flatbuffers::WIPOffset<GanericPacket<'a>>) {
+    root: flatbuffers::WIPOffset<GenericPacket<'a>>) {
   fbb.finish(root, None);
 }
 
 #[inline]
-pub fn finish_size_prefixed_ganeric_packet_buffer<'a, 'b>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>, root: flatbuffers::WIPOffset<GanericPacket<'a>>) {
+pub fn finish_size_prefixed_generic_packet_buffer<'a, 'b>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>, root: flatbuffers::WIPOffset<GenericPacket<'a>>) {
   fbb.finish_size_prefixed(root, None);
 }

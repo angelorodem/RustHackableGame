@@ -11,13 +11,8 @@ union Data {
     AskForPlayer, GameData, Message, OnlinePlayers, ReceivePlayer, SendGameScore
 }
 
-enum PacketType : uint8 {
-    ASKFORPLAYER, GAMEDATA, MESSAGE, ONLINEPLAYERS, RECEIVEPLAYER, SENDGAMESCORE
-}
-
-table GanericPacket {
-    type: PacketType;
+table GenericPacket {
     data: Data;
 }
 
-root_type GanericPacket;
+root_type GenericPacket;

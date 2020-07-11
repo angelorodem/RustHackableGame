@@ -10,4 +10,4 @@ edition = "2018"
 rand = "0.7.3"
 colored = "1.9"
 flatbuffers = "0.6.1"
-tokio = "0.2.21"
+tokio = { version = "0.2.21", features = ["full"] }

@@ -10,66 +10,6 @@ use std::cmp::Ordering;
 extern crate flatbuffers;
 use self::flatbuffers::EndianScalar;
 
-#[allow(non_camel_case_types)]
-#[repr(i8)]
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub enum StatusGameScore {
-  Ok = 0,
-  Fail = 1,
-
-}
-
-pub const ENUM_MIN_STATUS_GAME_SCORE: i8 = 0;
-pub const ENUM_MAX_STATUS_GAME_SCORE: i8 = 1;
-
-impl<'a> flatbuffers::Follow<'a> for StatusGameScore {
-  type Inner = Self;
-  #[inline]
-  fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
-    flatbuffers::read_scalar_at::<Self>(buf, loc)
-  }
-}
-
-impl flatbuffers::EndianScalar for StatusGameScore {
-  #[inline]
-  fn to_little_endian(self) -> Self {
-    let n = i8::to_le(self as i8);
-    let p = &n as *const i8 as *const StatusGameScore;
-    unsafe { *p }
-  }
-  #[inline]
-  fn from_little_endian(self) -> Self {
-    let n = i8::from_le(self as i8);
-    let p = &n as *const i8 as *const StatusGameScore;
-    unsafe { *p }
-  }
-}
-
-impl flatbuffers::Push for StatusGameScore {
-    type Output = StatusGameScore;
-    #[inline]
-    fn push(&self, dst: &mut [u8], _rest: &[u8]) {
-        flatbuffers::emplace_scalar::<StatusGameScore>(dst, *self);
-    }
-}
-
-#[allow(non_camel_case_types)]
-pub const ENUM_VALUES_STATUS_GAME_SCORE:[StatusGameScore; 2] = [
-  StatusGameScore::Ok,
-  StatusGameScore::Fail
-];
-
-#[allow(non_camel_case_types)]
-pub const ENUM_NAMES_STATUS_GAME_SCORE:[&'static str; 2] = [
-    "Ok",
-    "Fail"
-];
-
-pub fn enum_name_status_game_score(e: StatusGameScore) -> &'static str {
-  let index = e as i8;
-  ENUM_NAMES_STATUS_GAME_SCORE[index as usize]
-}
-
 pub enum SendGameScoreOffset {}
 #[derive(Copy, Clone, Debug, PartialEq)]
 
@@ -102,14 +42,12 @@ impl<'a> SendGameScore<'a> {
       if let Some(x) = args.score_message { builder.add_score_message(x); }
       if let Some(x) = args.game_result { builder.add_game_result(x); }
       if let Some(x) = args.player { builder.add_player(x); }
-      builder.add_status(args.status);
       builder.finish()
     }
 
     pub const VT_PLAYER: flatbuffers::VOffsetT = 4;
     pub const VT_GAME_RESULT: flatbuffers::VOffsetT = 6;
     pub const VT_SCORE_MESSAGE: flatbuffers::VOffsetT = 8;
-    pub const VT_STATUS: flatbuffers::VOffsetT = 10;
 
   #[inline]
   pub fn player(&self) -> Option<Player<'a>> {
@@ -123,17 +61,12 @@ impl<'a> SendGameScore<'a> {
   pub fn score_message(&self) -> Option<&'a str> {
     self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(SendGameScore::VT_SCORE_MESSAGE, None)
   }
-  #[inline]
-  pub fn status(&self) -> StatusGameScore {
-    self._tab.get::<StatusGameScore>(SendGameScore::VT_STATUS, Some(StatusGameScore::Ok)).unwrap()
-  }
 }
 
 pub struct SendGameScoreArgs<'a> {
     pub player: Option<flatbuffers::WIPOffset<Player<'a >>>,
     pub game_result: Option<flatbuffers::WIPOffset<GameResult<'a >>>,
     pub score_message: Option<flatbuffers::WIPOffset<&'a  str>>,
-    pub status: StatusGameScore,
 }
 impl<'a> Default for SendGameScoreArgs<'a> {
     #[inline]
@@ -142,7 +75,6 @@ impl<'a> Default for SendGameScoreArgs<'a> {
             player: None,
             game_result: None,
             score_message: None,
-            status: StatusGameScore::Ok,
         }
     }
 }
@@ -162,10 +94,6 @@ impl<'a: 'b, 'b> SendGameScoreBuilder<'a, 'b> {
   #[inline]
   pub fn add_score_message(&mut self, score_message: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(SendGameScore::VT_SCORE_MESSAGE, score_message);
-  }
-  #[inline]
-  pub fn add_status(&mut self, status: StatusGameScore) {
-    self.fbb_.push_slot::<StatusGameScore>(SendGameScore::VT_STATUS, status, StatusGameScore::Ok);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> SendGameScoreBuilder<'a, 'b> {
