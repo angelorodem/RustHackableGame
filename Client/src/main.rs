@@ -21,7 +21,7 @@ iterator for each, map, collect, filter, enumerate
 multiple Modules
 
 */
-#[allow(non_snake_case)]
+#[allow(non_snake_case, dead_code, unused_imports)]
 
 #[path = "../../Flat_Modules/AskForPlayer_generated.rs"]
 mod AskForPlayer_generated;

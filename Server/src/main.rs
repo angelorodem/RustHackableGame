@@ -1,4 +1,4 @@
-#[warn(non_snake_case)]
+#[allow(non_snake_case, dead_code, unused_imports)]
 
 #[path = "../../Flat_Modules/AskForPlayer_generated.rs"]
 mod AskForPlayer_generated;
@@ -34,7 +34,7 @@ use tokio::prelude::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut listener = TcpListener::bind("127.0.0.1:8080").await?;
+    let mut listener = TcpListener::bind("0.0.0.0:8080").await?;
 
     loop {
         let (mut socket, _) = listener.accept().await?;

@@ -10,16 +10,47 @@ pub mod GameNetworking {
 
 
     fn send_to_server(data : &[u8]){
+
+        
         println!("{:?}",&data);
     }
 
     fn receive_packet(data : &[u8]){
         //let mut builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
         //let buf = builder.finished_data();         
-        let afp_packet_re = get_root_as_generic_packet(data);
+        let recived_packed = get_root_as_generic_packet(data);
 
         //let afp_data_re = afp_packet_re.data_as_ask_for_player().unwrap();
-        println!("{:?}",afp_packet_re.data_type());
+        
+        //AskForPlayer, GameData, Message, OnlinePlayers, ReceivePlayer, SendGameScore
+        match recived_packed.data_type() {
+            Data::AskForPlayer => {
+                println!("AskForPlayer");
+            },
+            Data::GameData => {
+                println!("GameData");
+            },
+            Data::Message => {
+                println!("Message");
+            },
+            Data::OnlinePlayers =>  {
+                println!("OnlinePlayers");
+            },
+            Data::ReceivePlayer => {
+                println!("ReceivePlayer");
+            },
+            Data::SendGameScore => {
+                println!("SendGameScore");
+            },
+            _ => {
+                println!("none of above");
+            }
+
+        }
+        
+        
+        
+        //println!("{:?}",);
 
     }
 
