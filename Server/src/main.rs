@@ -64,3 +64,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
     }
 }
+
+//https://github.com/rust-lang/futures-rs/issues/1906
