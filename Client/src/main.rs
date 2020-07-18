@@ -1,3 +1,4 @@
+
 /*
 struct copy equal with ..
 struct init with same name/parameter
@@ -21,6 +22,7 @@ iterator for each, map, collect, filter, enumerate
 multiple Modules
 
 */
+
 #[allow(non_snake_case, dead_code, unused_imports)]
 
 #[path = "../../Flat_Modules/AskForPlayer_generated.rs"]
@@ -46,10 +48,12 @@ mod GenericPacket_generated;
 mod networking;
 #[path = "../../structures.rs"]
 mod structures;
+#[path = "../../serialization.rs"]
+mod serialization;
 
 extern crate flatbuffers;
 pub use crate::structures::Structures;
-pub use crate::networking::GameNetworking;
+pub use crate::networking::game_networking;
 
 
 use colored::*;
@@ -61,7 +65,7 @@ fn get_login() -> (String, String) {
     let mut name: String = String::new();
     let mut password: String = String::new();
 
-    println!("{}","Please insert your name!".yellow());
+    println!("{}","Please insert your Login!".yellow());
     
     io::stdin().read_line(&mut name).expect("Expected string.");
     let name = name.trim();
@@ -168,13 +172,14 @@ fn check_guesses(guesses : &Vec<i32>, player : &mut Structures::Player, low: &i3
 
 fn main() {  
     println!("Welcome to the Online {} Gambling game!", "Hackable".black());
+    println!("{}","Notes: Absolutely no bruteforce is needed to solve any Flags! \nplease don't spam the server, have fun!".blue());
     
     let (name, password) = get_login();
     let games = 3;
     let low = 1;
     let high = 7;
     
-    GameNetworking::ask_for_player(&name, &password);
+    //game_networking::ask_for_player(&name, &password);
 
     println!("\n\n {}, {}","Hello".green(),name.red());
     println!("{} {} {}","We will play".yellow() ,games,"rounds of Guess the number! (With special numbers)".yellow());
@@ -186,7 +191,7 @@ fn main() {
         ..Default::default()   
     };
 
-    GameNetworking::send_message(&player, String::from("Wow"), Structures::Color::Red);
+    //GameNetworking::send_message(&player, String::from("Wow"), Structures::Color::Red);
     
     let mut count : i32 = 0;
 
@@ -211,7 +216,7 @@ fn main() {
 
     //println!("Games score!: {}", &player.total_score);
 
-    GameNetworking::send_score(&player, String::from("Wow"));
+    //GameNetworking::send_score(&player, String::from("Wow"));
 
 
 }

@@ -1,4 +1,6 @@
 pub mod Structures {
+    use std::sync::{Mutex};
+
     #[derive(Debug)]
     #[derive(Default)]
     pub struct MatchScore {
@@ -20,5 +22,9 @@ pub mod Structures {
         Red = 0,
         Green = 1,
         Blue = 2
+    }
+
+    pub struct SharedVector {
+        pub svec: Mutex<Vec<String>>
     }
 }

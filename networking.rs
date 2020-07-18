@@ -1,145 +1,128 @@
-pub mod GameNetworking {
+pub mod game_networking {
+    use std::{error::Error};
 
-    pub use crate::structures::Structures;
-    pub use crate::GenericPacket_generated::{GenericPacket, GenericPacketArgs,Data, get_root_as_generic_packet};
-    pub use crate::AskForPlayer_generated::{AskForPlayer,AskForPlayerArgs, get_root_as_ask_for_player};
-    pub use crate::Message_generated::{Message, MessageArgs,Color, get_root_as_message};
-    pub use crate::Player_generated::{Player, PlayerArgs, get_root_as_player};
-    pub use crate::SendPlayerGameScore_generated::{SendGameScore, SendGameScoreArgs, get_root_as_send_game_score};
-    pub use crate::GameResult_generated::{GameResult, GameResultArgs, get_root_as_game_result};
+    use std::sync::{Arc,Mutex};
 
+    //use tokio::net::TcpStream;
+    //use futures::{future};
 
-    fn send_to_server(data : &[u8]){
+    use tokio::io::AsyncWriteExt;
+    use tokio::io::AsyncReadExt;
+
+    use tokio::net::tcp::{ReadHalf, WriteHalf};
+    use std::io;
+
+    use std::time::Duration;
+    use async_std::task;
+
+    use std::io::Cursor;
+    use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+
+    pub use crate::structures::Structures::SharedVector;
+
+    pub fn send_to_server(data : &[u8]){
 
         
-        println!("{:?}",&data);
+        
     }
 
-    fn receive_packet(data : &[u8]){
-        //let mut builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
-        //let buf = builder.finished_data();         
-        let recived_packed = get_root_as_generic_packet(data);
-
-        //let afp_data_re = afp_packet_re.data_as_ask_for_player().unwrap();
+    pub fn receive_packet() {
         
-        //AskForPlayer, GameData, Message, OnlinePlayers, ReceivePlayer, SendGameScore
-        match recived_packed.data_type() {
-            Data::AskForPlayer => {
-                println!("AskForPlayer");
-            },
-            Data::GameData => {
-                println!("GameData");
-            },
-            Data::Message => {
-                println!("Message");
-            },
-            Data::OnlinePlayers =>  {
-                println!("OnlinePlayers");
-            },
-            Data::ReceivePlayer => {
-                println!("ReceivePlayer");
-            },
-            Data::SendGameScore => {
-                println!("SendGameScore");
-            },
-            _ => {
-                println!("none of above");
-            }
 
+    }
+
+    pub fn parse_packets_stream(stream: &mut [u8], bytes_read: usize) -> Vec<Vec<u8>>{
+
+        let mut start: usize = 0;
+        let mut next: usize;
+
+        let mut result : Vec<Vec<u8>> = Vec::new();
+
+        println!("Lengh {:?}", bytes_read);
+        while  start+4 < bytes_read {
+
+            //println!("Init num: {:?}",start);
+            let mut rdr = Cursor::new(stream[start..start+4].to_vec());
+
+            //read_u32().await
+            
+            next = match ReadBytesExt::read_u32::<BigEndian>(&mut rdr) {
+                Ok(t) => {
+                    t as usize
+                },
+                Err(e) => {
+                    println!("{:?}",e);
+                    0
+                }    
+            };
+
+            
+            result.push(stream[start+4..start+4+next].to_vec());
+
+
+
+            let string_tx = String::from_utf8(result[result.len()-1].to_vec()).unwrap();
+            println!("{:?}",string_tx);
+
+            start += next + 4;
         }
+
+
+        result
+    }
+
+    pub async fn recv(reader: &mut ReadHalf<'_>) -> Result<(), io::Error> {
+        loop {
         
+            let mut buf : Vec<u8> = vec![0; 4096];
+
+            //let svector_pointer = &svec_p.clone();
+            //let mut vec = svector_pointer.svec.lock().unwrap();
+            //println!("Recv Lock");
+
+            let n = match reader.read(&mut buf).await {
+                // socket closed 
+                Ok(n) if n == 0 => return Ok(()),
+                Ok(n) => n,
+                Err(e) => {
+                    eprintln!("failed to read from socket; err = {:?}", e);
+                    return Err(e);
+                }
+            }; 
+            
+            parse_packets_stream(&mut buf, n as usize);
         
-        
-        //println!("{:?}",);
-
+            //println!("Recv Release");           
+        }
+        Ok(())
     }
 
-    fn send_packet<T>(data: flatbuffers::WIPOffset<T>, mut builder: flatbuffers::FlatBufferBuilder, packet_type: Data){
-        let afp_packet = GenericPacket::create(&mut builder, &GenericPacketArgs{
-            data_type: packet_type,
-            data: Some(data.as_union_value()),
-            ..Default::default()
-        });
 
-        builder.finish(afp_packet, None);
+    pub async fn send(writer: &mut WriteHalf<'_>) -> Result<(), io::Error> {
+        loop{
+             task::sleep(Duration::from_millis(300)).await;
+             { 
+                 
+                 //let svector_pointer = &svec_p.clone();
+                 //let mut vec = svector_pointer.svec.lock().unwrap();
+                 let a = vec!["AAAA"];
+                 //println!("Send Lock");
+    
+                 for i in a.iter() {
+                    let mut byte_array = vec![];
+                    let str_bytes = i.as_bytes();
+                    WriteBytesExt::write_u32::<BigEndian>(&mut byte_array, str_bytes.len() as u32).unwrap();
+                    byte_array.extend(str_bytes);
 
-        send_to_server(builder.finished_data());
-    }
-
-    pub fn ask_for_player(name: &String, password: &String){
-        let mut builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
-
-        let fname = builder.create_string(&name);
-        let fpassword = builder.create_string(&password);
-
-        let afp_data = AskForPlayer::create(&mut builder, &AskForPlayerArgs{
-            name: Some(fname),
-            password: Some(fpassword)
-        });
-
-        send_packet(afp_data, builder, Data::AskForPlayer);
-    }
-
-    fn player_packet<'a>(player_p: &Structures::Player, mut builder: flatbuffers::FlatBufferBuilder<'a>)
-                    -> (flatbuffers::FlatBufferBuilder<'a>, flatbuffers::WIPOffset<Player<'a>>)
-    {
-
-        let fplayer_name = builder.create_string(&player_p.name);
-        let fplayer_token = builder.create_string(&player_p.token);
-
-        let fplayer = Player::create(&mut builder, &PlayerArgs{
-            name: Some(fplayer_name),
-            auth_token: Some(fplayer_token),
-            ..Default::default()
-        });
-
-        (builder, fplayer)
-    }
-
-    pub fn send_message(player_p: &Structures::Player, message: String, color_p: Structures::Color){
-        let mut builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
-
-        let fmessage = builder.create_string(&message);
-
-        let (mut builder, fplayer) =  player_packet(&player_p, builder);
-
-        let fcolor = match color_p {
-            Structures::Color::Blue => Color::Blue,
-            Structures::Color::Green => Color::Green,
-            Structures::Color::Red => Color::Red
-        };
-
-        let fmessage_data = Message::create(&mut builder, &MessageArgs{
-            text: Some(fmessage),
-            color: fcolor,
-            from: Some(fplayer)
-        });
-
-        send_packet(fmessage_data, builder, Data::Message);
-    }
-
-    pub fn send_score(player_p: &Structures::Player, score_message: String){
-        let builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
-
-        let (mut builder, fplayer) =  player_packet(&player_p, builder);
+                    writer.write(&byte_array).await?;
+                 }
+                 //vec.clear();
+    
+             }
+             //println!("Send Release");
+        }
+         Ok(())
+     }
 
 
-        let fgame_result = GameResult::create(&mut builder, &GameResultArgs{
-            hits: player_p.game_score.hits,
-            misses: player_p.game_score.misses,
-            specials: player_p.game_score.specials,
-            score: player_p.game_score.score,
-        });
-
-        let message = builder.create_string(&score_message);
-
-        let game_score = SendGameScore::create(&mut builder, &SendGameScoreArgs{
-            player: Some(fplayer),
-            game_result: Some(fgame_result),
-            score_message: Some(message)
-        });
-
-        send_packet(game_score, builder, Data::SendGameScore);
-
-    }
 }

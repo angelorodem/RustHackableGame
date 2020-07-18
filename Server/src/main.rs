@@ -1,68 +1,84 @@
 #[allow(non_snake_case, dead_code, unused_imports)]
 
-#[path = "../../Flat_Modules/AskForPlayer_generated.rs"]
-mod AskForPlayer_generated;
-#[path = "../../Flat_Modules/GameData_generated.rs"]
-mod GameData_generated;
-#[path = "../../Flat_Modules/GameResult_generated.rs"]
-mod GameResult_generated;
-#[path = "../../Flat_Modules/Message_generated.rs"]
-mod Message_generated;
-#[path = "../../Flat_Modules/OnlinePlayers_generated.rs"]
-mod OnlinePlayers_generated;
-#[path = "../../Flat_Modules/Player_generated.rs"]
-mod Player_generated;
-#[path = "../../Flat_Modules/ReceivePlayer_generated.rs"]
-mod ReceivePlayer_generated;
-#[path = "../../Flat_Modules/SendPlayerGameScore_generated.rs"]
-mod SendPlayerGameScore_generated;
-#[path = "../../Flat_Modules/GenericPacket_generated.rs"]
-mod GenericPacket_generated;
-
 #[path = "../../networking.rs"]
 mod networking;
 #[path = "../../structures.rs"]
 mod structures;
 
-extern crate flatbuffers;
-pub use crate::structures::Structures;
-pub use crate::networking::GameNetworking;
+pub use crate::networking::game_networking::{recv, send, parse_packets_stream};
+pub use crate::structures::Structures::SharedVector;
 
+use std::sync::{Arc,Mutex};
+
+use futures::SinkExt;
+use tokio::net::TcpStream;
+use tokio::stream::StreamExt;
+use tokio_util::codec::{Framed, BytesCodec};
 
 use tokio::net::TcpListener;
 use tokio::prelude::*;
 
+
+use bytes::Bytes;
+
+use std::time::Duration;
+use async_std::task;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut listener = TcpListener::bind("0.0.0.0:8080").await?;
+    // println!("Listening on: {}", addr);
+
+    let mut init_vector = Vec::new();
+    init_vector.push("hello".to_string());
+    let sharedv = Arc::new(SharedVector {
+        svec: Mutex::new(init_vector),
+    });
+
 
     loop {
-        let (mut socket, _) = listener.accept().await?;
+        match listener.accept().await {
+            Ok((mut socket, _)) => {      
 
-        tokio::spawn(async move {
-            let mut buf = [0; 64];
-
-            // In a loop, read data from the socket and write the data back.
-            loop {
-                let n = match socket.read(&mut buf).await {
-                    // socket closed
-                    Ok(n) if n == 0 => return,
-                    Ok(n) => n,
-                    Err(e) => {
-                        eprintln!("failed to read from socket; err = {:?}", e);
-                        return;
-                    }
-                };
+                let mut shared_data = sharedv.clone();
                 
-                println!("{:?}",&buf[..]);
-                // Write the data back
-                if let Err(e) = socket.write_all(&buf[0..n]).await {
-                    eprintln!("failed to write to socket; err = {:?}", e);
-                    return;
-                }
-            }
-        });
+
+                tokio::spawn(async move {           
+                    let mut bytes = Framed::new(socket, BytesCodec::new());
+                    
+                    while let Some(data) = bytes.next().await {
+                        match data {
+                            Ok(mut byte) => {
+                                //println!("{:?}",byte);
+                                let n = byte.len();
+                                parse_packets_stream(&mut byte[..],n);
+
+                                if let Err(e) = bytes.send(Bytes::from(byte)).await {
+                                    println!("error on sending response; error = {:?}", e);
+                                }
+
+
+                            },
+                            Err(e) => println!("{:?}",e),
+                        }
+                    }
+
+                    
+                });
+
+            },
+            Err(e) => println!("Error reading socket {:?}", e),
+
+        }
+        task::sleep(Duration::from_millis(2)).await;
     }
 }
 
 //https://github.com/rust-lang/futures-rs/issues/1906
+
+
+
+
+fn handle_request(){
+    
+}
