@@ -1,0 +1,15 @@
+include "Player.fbs";
+
+enum StatusAnswerPlayer : byte {
+    OkNew = 0,
+    OkLogin = 1,
+    Denied = 2,
+    Failure = 3
+}
+
+table AnswerPlayer {
+    status: StatusAnswerPlayer;
+    player: Player;
+}
+
+root_type AnswerPlayer;

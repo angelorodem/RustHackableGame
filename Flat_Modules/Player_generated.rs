@@ -37,15 +37,19 @@ impl<'a> Player<'a> {
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
         args: &'args PlayerArgs<'args>) -> flatbuffers::WIPOffset<Player<'bldr>> {
       let mut builder = PlayerBuilder::new(_fbb);
+      builder.add_score(args.score);
       if let Some(x) = args.password { builder.add_password(x); }
       if let Some(x) = args.auth_token { builder.add_auth_token(x); }
       if let Some(x) = args.name { builder.add_name(x); }
+      builder.add_is_admin(args.is_admin);
       builder.finish()
     }
 
     pub const VT_NAME: flatbuffers::VOffsetT = 4;
     pub const VT_AUTH_TOKEN: flatbuffers::VOffsetT = 6;
     pub const VT_PASSWORD: flatbuffers::VOffsetT = 8;
+    pub const VT_SCORE: flatbuffers::VOffsetT = 10;
+    pub const VT_IS_ADMIN: flatbuffers::VOffsetT = 12;
 
   #[inline]
   pub fn name(&self) -> &'a str {
@@ -59,12 +63,22 @@ impl<'a> Player<'a> {
   pub fn password(&self) -> Option<&'a str> {
     self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(Player::VT_PASSWORD, None)
   }
+  #[inline]
+  pub fn score(&self) -> u64 {
+    self._tab.get::<u64>(Player::VT_SCORE, Some(0)).unwrap()
+  }
+  #[inline]
+  pub fn is_admin(&self) -> bool {
+    self._tab.get::<bool>(Player::VT_IS_ADMIN, Some(false)).unwrap()
+  }
 }
 
 pub struct PlayerArgs<'a> {
     pub name: Option<flatbuffers::WIPOffset<&'a  str>>,
     pub auth_token: Option<flatbuffers::WIPOffset<&'a  str>>,
     pub password: Option<flatbuffers::WIPOffset<&'a  str>>,
+    pub score: u64,
+    pub is_admin: bool,
 }
 impl<'a> Default for PlayerArgs<'a> {
     #[inline]
@@ -73,6 +87,8 @@ impl<'a> Default for PlayerArgs<'a> {
             name: None, // required field
             auth_token: None,
             password: None,
+            score: 0,
+            is_admin: false,
         }
     }
 }
@@ -92,6 +108,14 @@ impl<'a: 'b, 'b> PlayerBuilder<'a, 'b> {
   #[inline]
   pub fn add_password(&mut self, password: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Player::VT_PASSWORD, password);
+  }
+  #[inline]
+  pub fn add_score(&mut self, score: u64) {
+    self.fbb_.push_slot::<u64>(Player::VT_SCORE, score, 0);
+  }
+  #[inline]
+  pub fn add_is_admin(&mut self, is_admin: bool) {
+    self.fbb_.push_slot::<bool>(Player::VT_IS_ADMIN, is_admin, false);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> PlayerBuilder<'a, 'b> {

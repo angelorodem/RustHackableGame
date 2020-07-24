@@ -1,3 +1,4 @@
+#[allow(non_snake_case, dead_code, unused_imports)]
 pub mod game_networking {
     use std::{error::Error};
 
@@ -18,34 +19,20 @@ pub mod game_networking {
     use std::io::Cursor;
     use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
-    pub use crate::structures::Structures::SharedVector;
+    use bytes::{Bytes};
 
-    pub fn send_to_server(data : &[u8]){
+    use internet_checksum::checksum;    
 
-        
-        
-    }
+    pub use crate::structures::Structures;
 
-    pub fn receive_packet() {
-        
 
-    }
-
-    pub fn parse_packets_stream(stream: &mut [u8], bytes_read: usize) -> Vec<Vec<u8>>{
+    pub fn parse_packets_stream(stream: &mut [u8], bytes_read: usize, packets : &mut Structures::Packets) -> Result<(), ()> {
 
         let mut start: usize = 0;
-        let mut next: usize;
+        let mut next: usize;        
 
-        let mut result : Vec<Vec<u8>> = Vec::new();
-
-        println!("Lengh {:?}", bytes_read);
         while  start+4 < bytes_read {
-
-            //println!("Init num: {:?}",start);
-            let mut rdr = Cursor::new(stream[start..start+4].to_vec());
-
-            //read_u32().await
-            
+            let mut rdr = Cursor::new(stream[start..start+4].to_vec());            
             next = match ReadBytesExt::read_u32::<BigEndian>(&mut rdr) {
                 Ok(t) => {
                     t as usize
@@ -54,73 +41,58 @@ pub mod game_networking {
                     println!("{:?}",e);
                     0
                 }    
-            };
+            }; 
 
-            
-            result.push(stream[start+4..start+4+next].to_vec());
+            if next >= bytes_read ||  start+4+next > bytes_read {
+                return Err(());
+            }
 
-
-
-            let string_tx = String::from_utf8(result[result.len()-1].to_vec()).unwrap();
-            println!("{:?}",string_tx);
+            packets.push(Bytes::from(stream[start+4..start+4+next].to_vec()));    
 
             start += next + 4;
-        }
-
-
-        result
-    }
-
-    pub async fn recv(reader: &mut ReadHalf<'_>) -> Result<(), io::Error> {
-        loop {
-        
-            let mut buf : Vec<u8> = vec![0; 4096];
-
-            //let svector_pointer = &svec_p.clone();
-            //let mut vec = svector_pointer.svec.lock().unwrap();
-            //println!("Recv Lock");
-
-            let n = match reader.read(&mut buf).await {
-                // socket closed 
-                Ok(n) if n == 0 => return Ok(()),
-                Ok(n) => n,
-                Err(e) => {
-                    eprintln!("failed to read from socket; err = {:?}", e);
-                    return Err(e);
-                }
-            }; 
-            
-            parse_packets_stream(&mut buf, n as usize);
-        
-            //println!("Recv Release");           
         }
         Ok(())
     }
 
-
-    pub async fn send(writer: &mut WriteHalf<'_>) -> Result<(), io::Error> {
-        loop{
-             task::sleep(Duration::from_millis(300)).await;
-             { 
-                 
-                 //let svector_pointer = &svec_p.clone();
-                 //let mut vec = svector_pointer.svec.lock().unwrap();
-                 let a = vec!["AAAA"];
-                 //println!("Send Lock");
-    
-                 for i in a.iter() {
-                    let mut byte_array = vec![];
-                    let str_bytes = i.as_bytes();
-                    WriteBytesExt::write_u32::<BigEndian>(&mut byte_array, str_bytes.len() as u32).unwrap();
-                    byte_array.extend(str_bytes);
-
-                    writer.write(&byte_array).await?;
-                 }
-                 //vec.clear();
-    
-             }
-             //println!("Send Release");
+    pub async fn recv(reader: &mut ReadHalf<'_>, mut packets: &mut Structures::Packets) -> Result<(), io::Error> {
+              
+        let mut buf : Vec<u8> = vec![0; 4096];
+        let n = match reader.read(&mut buf).await {
+            // socket closed 
+            Ok(n) if n == 0 => return Ok(()),
+            Ok(n) => n,
+            Err(e) => {
+                eprintln!("failed to read from socket; err = {:?}", e);
+                return Err(e);
+            }
+        }; 
+        
+        if let Err(e) = parse_packets_stream(&mut buf, n as usize, &mut packets) {
+            println!("{:?}",e);
         }
+        
+        Ok(())
+    }
+
+    pub fn prepare_data(data : &bytes::Bytes) -> bytes::Bytes{
+        let mut byte_array = vec![];
+
+        WriteBytesExt::write_u32::<BigEndian>(&mut byte_array, (data.len()+2) as u32).unwrap();
+        let chk_sum = checksum(&data);
+        byte_array.extend(data);
+        byte_array.extend(&chk_sum);
+
+        bytes::Bytes::from(byte_array)
+    }
+
+    pub async fn send(writer: &mut WriteHalf<'_>, packets: &mut Structures::Packets) -> Result<(), io::Error> {  
+        
+        for mut packet in &mut packets.iter() {
+
+            let mut packet_ready = prepare_data(packet);
+            writer.write(&mut packet_ready).await?;
+        }  
+
          Ok(())
      }
 

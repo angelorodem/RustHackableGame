@@ -2,13 +2,13 @@
 
 
 
+use crate::AnswerPlayer_generated::*;
 use crate::AskForPlayer_generated::*;
 use crate::GameData_generated::*;
 use crate::GameResult_generated::*;
 use crate::Message_generated::*;
 use crate::OnlinePlayers_generated::*;
 use crate::Player_generated::*;
-use crate::ReceivePlayer_generated::*;
 use crate::SendPlayerGameScore_generated::*;
 use std::mem;
 use std::cmp::Ordering;
@@ -25,7 +25,7 @@ pub enum Data {
   GameData = 2,
   Message = 3,
   OnlinePlayers = 4,
-  ReceivePlayer = 5,
+  AnswerPlayer = 5,
   SendGameScore = 6,
 
 }
@@ -71,7 +71,7 @@ pub const ENUM_VALUES_DATA:[Data; 7] = [
   Data::GameData,
   Data::Message,
   Data::OnlinePlayers,
-  Data::ReceivePlayer,
+  Data::AnswerPlayer,
   Data::SendGameScore
 ];
 
@@ -82,7 +82,7 @@ pub const ENUM_NAMES_DATA:[&'static str; 7] = [
     "GameData",
     "Message",
     "OnlinePlayers",
-    "ReceivePlayer",
+    "AnswerPlayer",
     "SendGameScore"
 ];
 
@@ -179,9 +179,9 @@ impl<'a> GenericPacket<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn data_as_receive_player(&self) -> Option<ReceivePlayer<'a>> {
-    if self.data_type() == Data::ReceivePlayer {
-      self.data().map(|u| ReceivePlayer::init_from_table(u))
+  pub fn data_as_answer_player(&self) -> Option<AnswerPlayer<'a>> {
+    if self.data_type() == Data::AnswerPlayer {
+      self.data().map(|u| AnswerPlayer::init_from_table(u))
     } else {
       None
     }

@@ -14,44 +14,82 @@
 //! this repository! Many of them recommend running this as a simple "hook up
 //! stdin/stdout to a server" to get up and running.
 
-#![warn(rust_2018_idioms)]
+#[allow(non_snake_case, dead_code, unused_imports)]
 
+#[path = "../../../Flat_Modules/AskForPlayer_generated.rs"]
+mod AskForPlayer_generated;
+#[path = "../../../Flat_Modules/GameData_generated.rs"]
+mod GameData_generated;
+#[path = "../../../Flat_Modules/GameResult_generated.rs"]
+mod GameResult_generated;
+#[path = "../../../Flat_Modules/Message_generated.rs"]
+mod Message_generated;
+#[path = "../../../Flat_Modules/OnlinePlayers_generated.rs"]
+mod OnlinePlayers_generated;
+#[path = "../../../Flat_Modules/Player_generated.rs"]
+mod Player_generated;
+#[path = "../../../Flat_Modules/AnswerPlayer_generated.rs"]
+mod AnswerPlayer_generated;
+#[path = "../../../Flat_Modules/SendPlayerGameScore_generated.rs"]
+mod SendPlayerGameScore_generated;
+#[path = "../../../Flat_Modules/GenericPacket_generated.rs"]
+mod GenericPacket_generated;
+
+extern crate flatbuffers;
 
 use std::{error::Error};
-
-use std::sync::{Arc,Mutex};
-
-
 use tokio::net::TcpStream;
-use futures::{future};
+use bytes::Bytes;
+use futures::future;
 
-
-
+#[path = "../../../serialization.rs"]
+mod serialization;
 #[path = "../../../networking.rs"]
 mod networking;
 #[path = "../../../structures.rs"]
 mod structures;
 
-
 pub use crate::networking::game_networking::{send,recv};
-pub use crate::structures::Structures::SharedVector;
+pub use crate::structures::Structures;
+pub use crate::serialization::Serialization::{unpack_data, ask_for_player};
 
+use std::time::{ Instant, Duration };
+use tokio::time::delay_for;
 
+#[macro_use]
+extern crate num_derive;
+
+async fn handle_receive_packets(received_packets : &mut Structures::Packets){
+    println!("Size {:?}",received_packets.len());
+    for packet in received_packets.iter() {
+        let ret = unpack_data(packet);
+        println!("Server: {:#?}",ret);
+    }
+    received_packets.clear();
+}
 
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let mut stream = TcpStream::connect("127.0.0.1:8080").await?;
-    let (mut r, mut w) = stream.split();
+    let (mut in_half, mut out_half) = stream.split();
 
-    let sv_v = vec![String::from("Ola"),String::from("a"),String::from("todos"),String::from("os"),String::from("envolvidos")];
+    //
+    let mut send_packets : Structures::Packets = Vec::new();
+    send_packets.push(ask_for_player(&"angelo".to_string(), &"abc".to_string()));
+    //send_packets.push(Bytes::from("aa"));
 
-    let sharedv = Arc::new(SharedVector {
-        svec: Mutex::new(sv_v)
-    });
+    let mut receive_packets : Structures::Packets = Vec::new();
 
-    future::try_join(send(&mut w), recv(&mut r)).await?;
-    println!("Returned");
+    loop {
+        delay_for(Duration::from_secs(1)).await;
+        //println!("{:?}",count);
+        handle_receive_packets(&mut receive_packets).await;
+        
+        send(&mut out_half, &mut send_packets).await?;
+        recv(&mut in_half,  &mut receive_packets).await?;
+    }
+
     Ok(())
 }
 

@@ -2,6 +2,8 @@ table Player {
     name: string (required);
     auth_token: string;
     password: string;
+    score: uint64;
+    is_admin: bool;
 }
 
 root_type Player;
