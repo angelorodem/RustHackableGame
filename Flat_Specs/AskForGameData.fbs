@@ -1,0 +1,7 @@
+include "Player.fbs";
+
+table AskForGameData {
+    player: Player;
+}
+
+root_type AskForGameData;

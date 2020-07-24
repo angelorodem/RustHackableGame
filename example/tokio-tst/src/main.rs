@@ -18,8 +18,8 @@
 
 #[path = "../../../Flat_Modules/AskForPlayer_generated.rs"]
 mod AskForPlayer_generated;
-#[path = "../../../Flat_Modules/GameData_generated.rs"]
-mod GameData_generated;
+#[path = "../../../Flat_Modules/AnswerGameData_generated.rs"]
+mod AnswerGameData_generated;
 #[path = "../../../Flat_Modules/GameResult_generated.rs"]
 mod GameResult_generated;
 #[path = "../../../Flat_Modules/Message_generated.rs"]

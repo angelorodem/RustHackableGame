@@ -1,0 +1,6 @@
+//only accept one ask with same sequence
+table AskForOnlinePlayers {
+    sequence: int32;
+}
+
+root_type AskForOnlinePlayers;

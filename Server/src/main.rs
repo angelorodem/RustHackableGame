@@ -12,8 +12,8 @@ mod structures;
 
 #[path = "../../Flat_Modules/AskForPlayer_generated.rs"]
 mod AskForPlayer_generated;
-#[path = "../../Flat_Modules/GameData_generated.rs"]
-mod GameData_generated;
+#[path = "../../Flat_Modules/AnswerGameData_generated.rs"]
+mod AnswerGameData_generated;
 #[path = "../../Flat_Modules/GameResult_generated.rs"]
 mod GameResult_generated;
 #[path = "../../Flat_Modules/Message_generated.rs"]
@@ -51,7 +51,14 @@ use bytes::Bytes;
 use std::time::Duration;
 use async_std::task;
 
-pub use crate::serialization::Serialization::{unpack_data, ask_for_player, answer_player};
+pub use crate::serialization::Serialization::{unpack_data, ask_for_player, answer_player, game_data};
+
+static st_low: u32 = 5;
+static st_high: u32 = 5;
+static st_games: u32 = 5;
+static st_modt: &str = "Ola a todos, divirtam-se com o jogo";
+
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -81,7 +88,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 let mut to_send = handle_packets(&mut packets).await;
 
                                 while !to_send.is_empty() {
-                                    println!("Enviando : {:#?}", &to_send);
+                                    //println!("Enviando : {:#?}", &to_send);
                                     let mut data = to_send.pop().unwrap();
                                     let packet_ready = prepare_data(&mut data);
                                     if let Err(e) = frame.send(packet_ready).await {
@@ -146,6 +153,9 @@ async fn handle_packets(received_packets : &mut Structures::Packets) -> Structur
     packets_to_send
 }
 
+async fn send_game_data() -> bytes::Bytes {
+    game_data(st_modt.to_string(),st_low, st_high, st_games)
+}
 
 async fn ask_for_player_handle(name: String, password: String) -> bytes::Bytes {    
 

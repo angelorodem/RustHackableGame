@@ -9,15 +9,15 @@ use std::cmp::Ordering;
 extern crate flatbuffers;
 use self::flatbuffers::EndianScalar;
 
-pub enum OnlinePlayersOffset {}
+pub enum AnswerOnlinePlayersOffset {}
 #[derive(Copy, Clone, Debug, PartialEq)]
 
-pub struct OnlinePlayers<'a> {
+pub struct AnswerOnlinePlayers<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for OnlinePlayers<'a> {
-    type Inner = OnlinePlayers<'a>;
+impl<'a> flatbuffers::Follow<'a> for AnswerOnlinePlayers<'a> {
+    type Inner = AnswerOnlinePlayers<'a>;
     #[inline]
     fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         Self {
@@ -26,18 +26,18 @@ impl<'a> flatbuffers::Follow<'a> for OnlinePlayers<'a> {
     }
 }
 
-impl<'a> OnlinePlayers<'a> {
+impl<'a> AnswerOnlinePlayers<'a> {
     #[inline]
     pub fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-        OnlinePlayers {
+        AnswerOnlinePlayers {
             _tab: table,
         }
     }
     #[allow(unused_mut)]
     pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
-        args: &'args OnlinePlayersArgs<'args>) -> flatbuffers::WIPOffset<OnlinePlayers<'bldr>> {
-      let mut builder = OnlinePlayersBuilder::new(_fbb);
+        args: &'args AnswerOnlinePlayersArgs<'args>) -> flatbuffers::WIPOffset<AnswerOnlinePlayers<'bldr>> {
+      let mut builder = AnswerOnlinePlayersBuilder::new(_fbb);
       if let Some(x) = args.player { builder.add_player(x); }
       builder.finish()
     }
@@ -46,63 +46,63 @@ impl<'a> OnlinePlayers<'a> {
 
   #[inline]
   pub fn player(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Player<'a>>>> {
-    self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<flatbuffers::ForwardsUOffset<Player<'a>>>>>(OnlinePlayers::VT_PLAYER, None)
+    self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<flatbuffers::ForwardsUOffset<Player<'a>>>>>(AnswerOnlinePlayers::VT_PLAYER, None)
   }
 }
 
-pub struct OnlinePlayersArgs<'a> {
+pub struct AnswerOnlinePlayersArgs<'a> {
     pub player: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a , flatbuffers::ForwardsUOffset<Player<'a >>>>>,
 }
-impl<'a> Default for OnlinePlayersArgs<'a> {
+impl<'a> Default for AnswerOnlinePlayersArgs<'a> {
     #[inline]
     fn default() -> Self {
-        OnlinePlayersArgs {
+        AnswerOnlinePlayersArgs {
             player: None,
         }
     }
 }
-pub struct OnlinePlayersBuilder<'a: 'b, 'b> {
+pub struct AnswerOnlinePlayersBuilder<'a: 'b, 'b> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b> OnlinePlayersBuilder<'a, 'b> {
+impl<'a: 'b, 'b> AnswerOnlinePlayersBuilder<'a, 'b> {
   #[inline]
   pub fn add_player(&mut self, player: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Player<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(OnlinePlayers::VT_PLAYER, player);
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnswerOnlinePlayers::VT_PLAYER, player);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> OnlinePlayersBuilder<'a, 'b> {
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> AnswerOnlinePlayersBuilder<'a, 'b> {
     let start = _fbb.start_table();
-    OnlinePlayersBuilder {
+    AnswerOnlinePlayersBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<OnlinePlayers<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<AnswerOnlinePlayers<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
 #[inline]
-pub fn get_root_as_online_players<'a>(buf: &'a [u8]) -> OnlinePlayers<'a> {
-  flatbuffers::get_root::<OnlinePlayers<'a>>(buf)
+pub fn get_root_as_answer_online_players<'a>(buf: &'a [u8]) -> AnswerOnlinePlayers<'a> {
+  flatbuffers::get_root::<AnswerOnlinePlayers<'a>>(buf)
 }
 
 #[inline]
-pub fn get_size_prefixed_root_as_online_players<'a>(buf: &'a [u8]) -> OnlinePlayers<'a> {
-  flatbuffers::get_size_prefixed_root::<OnlinePlayers<'a>>(buf)
+pub fn get_size_prefixed_root_as_answer_online_players<'a>(buf: &'a [u8]) -> AnswerOnlinePlayers<'a> {
+  flatbuffers::get_size_prefixed_root::<AnswerOnlinePlayers<'a>>(buf)
 }
 
 #[inline]
-pub fn finish_online_players_buffer<'a, 'b>(
+pub fn finish_answer_online_players_buffer<'a, 'b>(
     fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>,
-    root: flatbuffers::WIPOffset<OnlinePlayers<'a>>) {
+    root: flatbuffers::WIPOffset<AnswerOnlinePlayers<'a>>) {
   fbb.finish(root, None);
 }
 
 #[inline]
-pub fn finish_size_prefixed_online_players_buffer<'a, 'b>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>, root: flatbuffers::WIPOffset<OnlinePlayers<'a>>) {
+pub fn finish_size_prefixed_answer_online_players_buffer<'a, 'b>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>, root: flatbuffers::WIPOffset<AnswerOnlinePlayers<'a>>) {
   fbb.finish_size_prefixed(root, None);
 }

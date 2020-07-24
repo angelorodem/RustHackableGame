@@ -2,14 +2,15 @@
 
 
 
+use crate::AnswerGameData_generated::*;
+use crate::AnswerOnlinePlayers_generated::*;
 use crate::AnswerPlayer_generated::*;
+use crate::AskForGameData_generated::*;
+use crate::AskForOnlinePlayers_generated::*;
 use crate::AskForPlayer_generated::*;
-use crate::GameData_generated::*;
-use crate::GameResult_generated::*;
 use crate::Message_generated::*;
-use crate::OnlinePlayers_generated::*;
 use crate::Player_generated::*;
-use crate::SendPlayerGameScore_generated::*;
+use crate::SendGameScore_generated::*;
 use std::mem;
 use std::cmp::Ordering;
 
@@ -22,16 +23,18 @@ use self::flatbuffers::EndianScalar;
 pub enum Data {
   NONE = 0,
   AskForPlayer = 1,
-  GameData = 2,
-  Message = 3,
-  OnlinePlayers = 4,
+  AskForGameData = 2,
+  AskForOnlinePlayers = 3,
+  AnswerGameData = 4,
   AnswerPlayer = 5,
-  SendGameScore = 6,
+  AnswerOnlinePlayers = 6,
+  SendGameScore = 7,
+  Message = 8,
 
 }
 
 pub const ENUM_MIN_DATA: u8 = 0;
-pub const ENUM_MAX_DATA: u8 = 6;
+pub const ENUM_MAX_DATA: u8 = 8;
 
 impl<'a> flatbuffers::Follow<'a> for Data {
   type Inner = Self;
@@ -65,25 +68,29 @@ impl flatbuffers::Push for Data {
 }
 
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_DATA:[Data; 7] = [
+pub const ENUM_VALUES_DATA:[Data; 9] = [
   Data::NONE,
   Data::AskForPlayer,
-  Data::GameData,
-  Data::Message,
-  Data::OnlinePlayers,
+  Data::AskForGameData,
+  Data::AskForOnlinePlayers,
+  Data::AnswerGameData,
   Data::AnswerPlayer,
-  Data::SendGameScore
+  Data::AnswerOnlinePlayers,
+  Data::SendGameScore,
+  Data::Message
 ];
 
 #[allow(non_camel_case_types)]
-pub const ENUM_NAMES_DATA:[&'static str; 7] = [
+pub const ENUM_NAMES_DATA:[&'static str; 9] = [
     "NONE",
     "AskForPlayer",
-    "GameData",
-    "Message",
-    "OnlinePlayers",
+    "AskForGameData",
+    "AskForOnlinePlayers",
+    "AnswerGameData",
     "AnswerPlayer",
-    "SendGameScore"
+    "AnswerOnlinePlayers",
+    "SendGameScore",
+    "Message"
 ];
 
 pub fn enum_name_data(e: Data) -> &'static str {
@@ -149,9 +156,9 @@ impl<'a> GenericPacket<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn data_as_game_data(&self) -> Option<GameData<'a>> {
-    if self.data_type() == Data::GameData {
-      self.data().map(|u| GameData::init_from_table(u))
+  pub fn data_as_ask_for_game_data(&self) -> Option<AskForGameData<'a>> {
+    if self.data_type() == Data::AskForGameData {
+      self.data().map(|u| AskForGameData::init_from_table(u))
     } else {
       None
     }
@@ -159,9 +166,9 @@ impl<'a> GenericPacket<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn data_as_message(&self) -> Option<Message<'a>> {
-    if self.data_type() == Data::Message {
-      self.data().map(|u| Message::init_from_table(u))
+  pub fn data_as_ask_for_online_players(&self) -> Option<AskForOnlinePlayers<'a>> {
+    if self.data_type() == Data::AskForOnlinePlayers {
+      self.data().map(|u| AskForOnlinePlayers::init_from_table(u))
     } else {
       None
     }
@@ -169,9 +176,9 @@ impl<'a> GenericPacket<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
-  pub fn data_as_online_players(&self) -> Option<OnlinePlayers<'a>> {
-    if self.data_type() == Data::OnlinePlayers {
-      self.data().map(|u| OnlinePlayers::init_from_table(u))
+  pub fn data_as_answer_game_data(&self) -> Option<AnswerGameData<'a>> {
+    if self.data_type() == Data::AnswerGameData {
+      self.data().map(|u| AnswerGameData::init_from_table(u))
     } else {
       None
     }
@@ -189,9 +196,29 @@ impl<'a> GenericPacket<'a> {
 
   #[inline]
   #[allow(non_snake_case)]
+  pub fn data_as_answer_online_players(&self) -> Option<AnswerOnlinePlayers<'a>> {
+    if self.data_type() == Data::AnswerOnlinePlayers {
+      self.data().map(|u| AnswerOnlinePlayers::init_from_table(u))
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
   pub fn data_as_send_game_score(&self) -> Option<SendGameScore<'a>> {
     if self.data_type() == Data::SendGameScore {
       self.data().map(|u| SendGameScore::init_from_table(u))
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_message(&self) -> Option<Message<'a>> {
+    if self.data_type() == Data::Message {
+      self.data().map(|u| Message::init_from_table(u))
     } else {
       None
     }

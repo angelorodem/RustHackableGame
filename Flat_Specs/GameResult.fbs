@@ -1,9 +1,0 @@
-
-table GameResult {
-    hits: uint32;
-    specials: uint32;
-    misses: uint32;
-    score: int32;
-}
-
-root_type GameResult;

@@ -2,13 +2,83 @@
 
 
 
-use crate::GameResult_generated::*;
 use crate::Player_generated::*;
 use std::mem;
 use std::cmp::Ordering;
 
 extern crate flatbuffers;
 use self::flatbuffers::EndianScalar;
+
+// struct GameResult, aligned to 4
+#[repr(C, align(4))]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct GameResult {
+  hits_: u32,
+  specials_: u32,
+  misses_: u32,
+  score_: i32,
+} // pub struct GameResult
+impl flatbuffers::SafeSliceAccess for GameResult {}
+impl<'a> flatbuffers::Follow<'a> for GameResult {
+  type Inner = &'a GameResult;
+  #[inline]
+  fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    <&'a GameResult>::follow(buf, loc)
+  }
+}
+impl<'a> flatbuffers::Follow<'a> for &'a GameResult {
+  type Inner = &'a GameResult;
+  #[inline]
+  fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    flatbuffers::follow_cast_ref::<GameResult>(buf, loc)
+  }
+}
+impl<'b> flatbuffers::Push for GameResult {
+    type Output = GameResult;
+    #[inline]
+    fn push(&self, dst: &mut [u8], _rest: &[u8]) {
+        let src = unsafe {
+            ::std::slice::from_raw_parts(self as *const GameResult as *const u8, Self::size())
+        };
+        dst.copy_from_slice(src);
+    }
+}
+impl<'b> flatbuffers::Push for &'b GameResult {
+    type Output = GameResult;
+
+    #[inline]
+    fn push(&self, dst: &mut [u8], _rest: &[u8]) {
+        let src = unsafe {
+            ::std::slice::from_raw_parts(*self as *const GameResult as *const u8, Self::size())
+        };
+        dst.copy_from_slice(src);
+    }
+}
+
+
+impl GameResult {
+  pub fn new<'a>(_hits: u32, _specials: u32, _misses: u32, _score: i32) -> Self {
+    GameResult {
+      hits_: _hits.to_little_endian(),
+      specials_: _specials.to_little_endian(),
+      misses_: _misses.to_little_endian(),
+      score_: _score.to_little_endian(),
+
+    }
+  }
+  pub fn hits<'a>(&'a self) -> u32 {
+    self.hits_.from_little_endian()
+  }
+  pub fn specials<'a>(&'a self) -> u32 {
+    self.specials_.from_little_endian()
+  }
+  pub fn misses<'a>(&'a self) -> u32 {
+    self.misses_.from_little_endian()
+  }
+  pub fn score<'a>(&'a self) -> i32 {
+    self.score_.from_little_endian()
+  }
+}
 
 pub enum SendGameScoreOffset {}
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -54,8 +124,8 @@ impl<'a> SendGameScore<'a> {
     self._tab.get::<flatbuffers::ForwardsUOffset<Player<'a>>>(SendGameScore::VT_PLAYER, None)
   }
   #[inline]
-  pub fn game_result(&self) -> Option<GameResult<'a>> {
-    self._tab.get::<flatbuffers::ForwardsUOffset<GameResult<'a>>>(SendGameScore::VT_GAME_RESULT, None)
+  pub fn game_result(&self) -> Option<&'a GameResult> {
+    self._tab.get::<GameResult>(SendGameScore::VT_GAME_RESULT, None)
   }
   #[inline]
   pub fn score_message(&self) -> Option<&'a str> {
@@ -65,7 +135,7 @@ impl<'a> SendGameScore<'a> {
 
 pub struct SendGameScoreArgs<'a> {
     pub player: Option<flatbuffers::WIPOffset<Player<'a >>>,
-    pub game_result: Option<flatbuffers::WIPOffset<GameResult<'a >>>,
+    pub game_result: Option<&'a  GameResult>,
     pub score_message: Option<flatbuffers::WIPOffset<&'a  str>>,
 }
 impl<'a> Default for SendGameScoreArgs<'a> {
@@ -88,8 +158,8 @@ impl<'a: 'b, 'b> SendGameScoreBuilder<'a, 'b> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<Player>>(SendGameScore::VT_PLAYER, player);
   }
   #[inline]
-  pub fn add_game_result(&mut self, game_result: flatbuffers::WIPOffset<GameResult<'b >>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<GameResult>>(SendGameScore::VT_GAME_RESULT, game_result);
+  pub fn add_game_result(&mut self, game_result: &'b  GameResult) {
+    self.fbb_.push_slot_always::<&GameResult>(SendGameScore::VT_GAME_RESULT, game_result);
   }
   #[inline]
   pub fn add_score_message(&mut self, score_message: flatbuffers::WIPOffset<&'b  str>) {

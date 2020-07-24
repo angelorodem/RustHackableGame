@@ -8,15 +8,15 @@ use std::cmp::Ordering;
 extern crate flatbuffers;
 use self::flatbuffers::EndianScalar;
 
-pub enum GameDataOffset {}
+pub enum AnswerGameDataOffset {}
 #[derive(Copy, Clone, Debug, PartialEq)]
 
-pub struct GameData<'a> {
+pub struct AnswerGameData<'a> {
   pub _tab: flatbuffers::Table<'a>,
 }
 
-impl<'a> flatbuffers::Follow<'a> for GameData<'a> {
-    type Inner = GameData<'a>;
+impl<'a> flatbuffers::Follow<'a> for AnswerGameData<'a> {
+    type Inner = AnswerGameData<'a>;
     #[inline]
     fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
         Self {
@@ -25,18 +25,18 @@ impl<'a> flatbuffers::Follow<'a> for GameData<'a> {
     }
 }
 
-impl<'a> GameData<'a> {
+impl<'a> AnswerGameData<'a> {
     #[inline]
     pub fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
-        GameData {
+        AnswerGameData {
             _tab: table,
         }
     }
     #[allow(unused_mut)]
     pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
-        args: &'args GameDataArgs<'args>) -> flatbuffers::WIPOffset<GameData<'bldr>> {
-      let mut builder = GameDataBuilder::new(_fbb);
+        args: &'args AnswerGameDataArgs<'args>) -> flatbuffers::WIPOffset<AnswerGameData<'bldr>> {
+      let mut builder = AnswerGameDataBuilder::new(_fbb);
       builder.add_games(args.games);
       builder.add_high(args.high);
       builder.add_low(args.low);
@@ -51,32 +51,32 @@ impl<'a> GameData<'a> {
 
   #[inline]
   pub fn motd(&self) -> Option<&'a str> {
-    self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(GameData::VT_MOTD, None)
+    self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AnswerGameData::VT_MOTD, None)
   }
   #[inline]
   pub fn low(&self) -> u32 {
-    self._tab.get::<u32>(GameData::VT_LOW, Some(0)).unwrap()
+    self._tab.get::<u32>(AnswerGameData::VT_LOW, Some(0)).unwrap()
   }
   #[inline]
   pub fn high(&self) -> u32 {
-    self._tab.get::<u32>(GameData::VT_HIGH, Some(0)).unwrap()
+    self._tab.get::<u32>(AnswerGameData::VT_HIGH, Some(0)).unwrap()
   }
   #[inline]
   pub fn games(&self) -> u32 {
-    self._tab.get::<u32>(GameData::VT_GAMES, Some(0)).unwrap()
+    self._tab.get::<u32>(AnswerGameData::VT_GAMES, Some(0)).unwrap()
   }
 }
 
-pub struct GameDataArgs<'a> {
+pub struct AnswerGameDataArgs<'a> {
     pub motd: Option<flatbuffers::WIPOffset<&'a  str>>,
     pub low: u32,
     pub high: u32,
     pub games: u32,
 }
-impl<'a> Default for GameDataArgs<'a> {
+impl<'a> Default for AnswerGameDataArgs<'a> {
     #[inline]
     fn default() -> Self {
-        GameDataArgs {
+        AnswerGameDataArgs {
             motd: None,
             low: 0,
             high: 0,
@@ -84,60 +84,60 @@ impl<'a> Default for GameDataArgs<'a> {
         }
     }
 }
-pub struct GameDataBuilder<'a: 'b, 'b> {
+pub struct AnswerGameDataBuilder<'a: 'b, 'b> {
   fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
   start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
 }
-impl<'a: 'b, 'b> GameDataBuilder<'a, 'b> {
+impl<'a: 'b, 'b> AnswerGameDataBuilder<'a, 'b> {
   #[inline]
   pub fn add_motd(&mut self, motd: flatbuffers::WIPOffset<&'b  str>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(GameData::VT_MOTD, motd);
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnswerGameData::VT_MOTD, motd);
   }
   #[inline]
   pub fn add_low(&mut self, low: u32) {
-    self.fbb_.push_slot::<u32>(GameData::VT_LOW, low, 0);
+    self.fbb_.push_slot::<u32>(AnswerGameData::VT_LOW, low, 0);
   }
   #[inline]
   pub fn add_high(&mut self, high: u32) {
-    self.fbb_.push_slot::<u32>(GameData::VT_HIGH, high, 0);
+    self.fbb_.push_slot::<u32>(AnswerGameData::VT_HIGH, high, 0);
   }
   #[inline]
   pub fn add_games(&mut self, games: u32) {
-    self.fbb_.push_slot::<u32>(GameData::VT_GAMES, games, 0);
+    self.fbb_.push_slot::<u32>(AnswerGameData::VT_GAMES, games, 0);
   }
   #[inline]
-  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> GameDataBuilder<'a, 'b> {
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> AnswerGameDataBuilder<'a, 'b> {
     let start = _fbb.start_table();
-    GameDataBuilder {
+    AnswerGameDataBuilder {
       fbb_: _fbb,
       start_: start,
     }
   }
   #[inline]
-  pub fn finish(self) -> flatbuffers::WIPOffset<GameData<'a>> {
+  pub fn finish(self) -> flatbuffers::WIPOffset<AnswerGameData<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
 }
 
 #[inline]
-pub fn get_root_as_game_data<'a>(buf: &'a [u8]) -> GameData<'a> {
-  flatbuffers::get_root::<GameData<'a>>(buf)
+pub fn get_root_as_answer_game_data<'a>(buf: &'a [u8]) -> AnswerGameData<'a> {
+  flatbuffers::get_root::<AnswerGameData<'a>>(buf)
 }
 
 #[inline]
-pub fn get_size_prefixed_root_as_game_data<'a>(buf: &'a [u8]) -> GameData<'a> {
-  flatbuffers::get_size_prefixed_root::<GameData<'a>>(buf)
+pub fn get_size_prefixed_root_as_answer_game_data<'a>(buf: &'a [u8]) -> AnswerGameData<'a> {
+  flatbuffers::get_size_prefixed_root::<AnswerGameData<'a>>(buf)
 }
 
 #[inline]
-pub fn finish_game_data_buffer<'a, 'b>(
+pub fn finish_answer_game_data_buffer<'a, 'b>(
     fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>,
-    root: flatbuffers::WIPOffset<GameData<'a>>) {
+    root: flatbuffers::WIPOffset<AnswerGameData<'a>>) {
   fbb.finish(root, None);
 }
 
 #[inline]
-pub fn finish_size_prefixed_game_data_buffer<'a, 'b>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>, root: flatbuffers::WIPOffset<GameData<'a>>) {
+pub fn finish_size_prefixed_answer_game_data_buffer<'a, 'b>(fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>, root: flatbuffers::WIPOffset<AnswerGameData<'a>>) {
   fbb.finish_size_prefixed(root, None);
 }

@@ -1,14 +1,18 @@
 include "AskForPlayer.fbs";
-include "GameData.fbs";
-include "GameResult.fbs";
-include "Message.fbs";
-include "OnlinePlayers.fbs";
-include "Player.fbs";
+include "AskForGameData.fbs";
+include "AskForOnlinePlayers.fbs";
+
+include "AnswerGameData.fbs";
+include "AnswerOnlinePlayers.fbs";
 include "AnswerPlayer.fbs";
-include "SendPlayerGameScore.fbs";
+
+include "SendGameScore.fbs";
+include "Message.fbs";
 
 union Data {
-    AskForPlayer, GameData, Message, OnlinePlayers, AnswerPlayer, SendGameScore
+    AskForPlayer, AskForGameData, AskForOnlinePlayers,
+    AnswerGameData, AnswerPlayer, AnswerOnlinePlayers,
+    SendGameScore, Message
 }
 
 table GenericPacket {

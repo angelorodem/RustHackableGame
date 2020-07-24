@@ -16,6 +16,7 @@ pub mod Serialization {
     pub use crate::SendPlayerGameScore_generated::{SendGameScore, SendGameScoreArgs, get_root_as_send_game_score};
     pub use crate::GameResult_generated::{GameResult, GameResultArgs, get_root_as_game_result};
     pub use crate::AnswerPlayer_generated::{AnswerPlayer, AnswerPlayerArgs, get_root_as_answer_player, StatusAnswerPlayer};
+    pub use crate::GameData_generated::{GameData, GameDataArgs, get_root_as_game_data};
 
 
     //Unpacks Generic Packets
@@ -207,6 +208,22 @@ pub mod Serialization {
 
         pack_data(fanswer_player, builder, Data::AnswerPlayer)
 
+
+    }
+
+    pub fn game_data(motd: String, low : u32, high: u32, games: u32) -> bytes::Bytes {
+        let builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
+
+        let message = builder.create_string(&motd);
+
+        let fgame_data = GameData::create(&mut builder, GameDataArgs{
+            motd: message,
+            low;
+            high;
+            games;    
+        });
+
+        pack_data(fgame_data, builder, Data::GameData)
 
     }
 
