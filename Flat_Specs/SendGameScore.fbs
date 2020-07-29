@@ -4,7 +4,7 @@ struct GameResult {
     hits: uint32;
     specials: uint32;
     misses: uint32;
-    score: int32;
+    score: int64;
 }
 
 table SendGameScore {

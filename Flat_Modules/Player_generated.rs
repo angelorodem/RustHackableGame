@@ -64,8 +64,8 @@ impl<'a> Player<'a> {
     self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(Player::VT_PASSWORD, None)
   }
   #[inline]
-  pub fn score(&self) -> u64 {
-    self._tab.get::<u64>(Player::VT_SCORE, Some(0)).unwrap()
+  pub fn score(&self) -> i64 {
+    self._tab.get::<i64>(Player::VT_SCORE, Some(0)).unwrap()
   }
   #[inline]
   pub fn is_admin(&self) -> bool {
@@ -77,7 +77,7 @@ pub struct PlayerArgs<'a> {
     pub name: Option<flatbuffers::WIPOffset<&'a  str>>,
     pub auth_token: Option<flatbuffers::WIPOffset<&'a  str>>,
     pub password: Option<flatbuffers::WIPOffset<&'a  str>>,
-    pub score: u64,
+    pub score: i64,
     pub is_admin: bool,
 }
 impl<'a> Default for PlayerArgs<'a> {
@@ -110,8 +110,8 @@ impl<'a: 'b, 'b> PlayerBuilder<'a, 'b> {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(Player::VT_PASSWORD, password);
   }
   #[inline]
-  pub fn add_score(&mut self, score: u64) {
-    self.fbb_.push_slot::<u64>(Player::VT_SCORE, score, 0);
+  pub fn add_score(&mut self, score: i64) {
+    self.fbb_.push_slot::<i64>(Player::VT_SCORE, score, 0);
   }
   #[inline]
   pub fn add_is_admin(&mut self, is_admin: bool) {

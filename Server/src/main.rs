@@ -10,28 +10,34 @@ mod networking;
 #[path = "../../structures.rs"]
 mod structures;
 
-#[path = "../../Flat_Modules/AskForPlayer_generated.rs"]
-mod AskForPlayer_generated;
-#[path = "../../Flat_Modules/AnswerGameData_generated.rs"]
-mod AnswerGameData_generated;
-#[path = "../../Flat_Modules/GameResult_generated.rs"]
-mod GameResult_generated;
-#[path = "../../Flat_Modules/Message_generated.rs"]
-mod Message_generated;
-#[path = "../../Flat_Modules/OnlinePlayers_generated.rs"]
-mod OnlinePlayers_generated;
-#[path = "../../Flat_Modules/Player_generated.rs"]
-mod Player_generated;
-#[path = "../../Flat_Modules/AnswerPlayer_generated.rs"]
-mod AnswerPlayer_generated;
-#[path = "../../Flat_Modules/SendPlayerGameScore_generated.rs"]
-mod SendPlayerGameScore_generated;
 #[path = "../../Flat_Modules/GenericPacket_generated.rs"]
 mod GenericPacket_generated;
 
+#[path = "../../Flat_Modules/AnswerGameData_generated.rs"]
+mod AnswerGameData_generated;
+#[path = "../../Flat_Modules/AnswerOnlinePlayers_generated.rs"]
+mod AnswerOnlinePlayers_generated;
+#[path = "../../Flat_Modules/AnswerPlayer_generated.rs"]
+mod AnswerPlayer_generated;
+
+#[path = "../../Flat_Modules/AskForGameData_generated.rs"]
+mod AskForGameData_generated;
+#[path = "../../Flat_Modules/AskForOnlinePlayers_generated.rs"]
+mod AskForOnlinePlayers_generated;
+#[path = "../../Flat_Modules/AskForPlayer_generated.rs"]
+mod AskForPlayer_generated;
+
+#[path = "../../Flat_Modules/Message_generated.rs"]
+mod Message_generated;
+#[path = "../../Flat_Modules/SendGameScore_generated.rs"]
+mod SendGameScore_generated;
+
+#[path = "../../Flat_Modules/Player_generated.rs"]
+mod Player_generated;
+
 extern crate flatbuffers;
 
-pub use crate::networking::game_networking::{parse_packets_stream, prepare_data};
+pub use crate::networking::game_networking::{parse_packets_stream, prepare_data, parse_packets_stream_sync};
 pub use crate::structures::Structures;
 
 use std::sync::{Arc,Mutex};
@@ -51,12 +57,12 @@ use bytes::Bytes;
 use std::time::Duration;
 use async_std::task;
 
-pub use crate::serialization::Serialization::{unpack_data, ask_for_player, answer_player, game_data};
+pub use crate::serialization::Serialization::{unpack_data, ask_for_player, answer_player, answer_game_data};
 
-static st_low: u32 = 5;
-static st_high: u32 = 5;
+static st_low: u32 = 1;
+static st_high: u32 = 6;
 static st_games: u32 = 5;
-static st_modt: &str = "Ola a todos, divirtam-se com o jogo";
+static st_modt: &str = "Prizes in gold bars are now available to best players!";
 
 
 
@@ -81,22 +87,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 //println!("{:?}",byte);
                                 let n = byte.len();
                                 let mut packets : Structures::Packets = Vec::new();
-                                if let Err(t) = parse_packets_stream(&mut byte[..],n, &mut packets) {
+                                if let Err(t) = parse_packets_stream_sync(&mut byte[..],n, &mut packets) {
                                     println!("Decoding error");
                                 }
 
                                 let mut to_send = handle_packets(&mut packets).await;
-
                                 while !to_send.is_empty() {
                                     //println!("Enviando : {:#?}", &to_send);
                                     let mut data = to_send.pop().unwrap();
+                                    if data.is_empty() {
+                                        continue;
+                                    }
                                     let packet_ready = prepare_data(&mut data);
                                     if let Err(e) = frame.send(packet_ready).await {
                                         println!("error on sending response; error = {:?}", e);
                                     }
                                 }
-
-
                             },
                             Err(e) => println!("{:?}",e),
                         }
@@ -123,20 +129,28 @@ async fn handle_packets(received_packets : &mut Structures::Packets) -> Structur
             Structures::PacketTypes::AskForPlayer{name, password} => {
                 ask_for_player_handle(name,password).await
             }
-            Structures::PacketTypes::GameData{ motd, low , high, games} => {
-                bytes::Bytes::from("not supposed to recieve")
+            Structures::PacketTypes::AskForGameData{player} => {
+                send_game_data().await
             }
-            Structures::PacketTypes::Message{text,  color, from} => {
+            Structures::PacketTypes::AskForOnlinePlayers{sequence_p} => {
                 bytes::Bytes::from("--wip--")
             }
-            Structures::PacketTypes::OnlinePlayers{players} => {
+
+            Structures::PacketTypes::AnswerGameData{ motd, low , high, games} => {
+                bytes::Bytes::from("not supposed to recieve")
+            }
+            Structures::PacketTypes::AnswerOnlinePlayers{players} => {
                 bytes::Bytes::from("not supposed to recieve")
             }
             Structures::PacketTypes::AnswerPlayer{status, player} => {
                 bytes::Bytes::from("not supposed to recieve")
             }
-            Structures::PacketTypes::SendGameScore{player, game_result, score_message} => {
+
+            Structures::PacketTypes::Message{text,  color, from} => {
                 bytes::Bytes::from("--wip--")
+            }
+            Structures::PacketTypes::SendGameScore{player, game_result, score_message} => {
+                recieve_score(player, game_result, score_message).await
             }
             Structures::PacketTypes::None => {
                 bytes::Bytes::from("not supposed to recieve")
@@ -153,8 +167,14 @@ async fn handle_packets(received_packets : &mut Structures::Packets) -> Structur
     packets_to_send
 }
 
+async fn recieve_score(player: Structures::Player, game_result : Structures::MatchScore, score_message: String) -> bytes::Bytes{
+    println!("New score from: {}\n{:#?}\n{}",player.name,game_result,score_message);
+
+    bytes::Bytes::from("")
+}
+
 async fn send_game_data() -> bytes::Bytes {
-    game_data(st_modt.to_string(),st_low, st_high, st_games)
+    answer_game_data(st_modt.to_string(),st_low, st_high, st_games)
 }
 
 async fn ask_for_player_handle(name: String, password: String) -> bytes::Bytes {    

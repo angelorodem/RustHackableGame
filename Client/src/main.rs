@@ -25,50 +25,73 @@ multiple Modules
 
 #[allow(non_snake_case, dead_code, unused_imports)]
 
-#[path = "../../Flat_Modules/AskForPlayer_generated.rs"]
-mod AskForPlayer_generated;
-#[path = "../../Flat_Modules/GameData_generated.rs"]
-mod GameData_generated;
-#[path = "../../Flat_Modules/GameResult_generated.rs"]
-mod GameResult_generated;
-#[path = "../../Flat_Modules/Message_generated.rs"]
-mod Message_generated;
-#[path = "../../Flat_Modules/OnlinePlayers_generated.rs"]
-mod OnlinePlayers_generated;
-#[path = "../../Flat_Modules/Player_generated.rs"]
-mod Player_generated;
-#[path = "../../Flat_Modules/ReceivePlayer_generated.rs"]
-mod ReceivePlayer_generated;
-#[path = "../../Flat_Modules/SendPlayerGameScore_generated.rs"]
-mod SendPlayerGameScore_generated;
 #[path = "../../Flat_Modules/GenericPacket_generated.rs"]
 mod GenericPacket_generated;
 
+#[path = "../../Flat_Modules/AnswerGameData_generated.rs"]
+mod AnswerGameData_generated;
+#[path = "../../Flat_Modules/AnswerOnlinePlayers_generated.rs"]
+mod AnswerOnlinePlayers_generated;
+#[path = "../../Flat_Modules/AnswerPlayer_generated.rs"]
+mod AnswerPlayer_generated;
+
+#[path = "../../Flat_Modules/AskForGameData_generated.rs"]
+mod AskForGameData_generated;
+#[path = "../../Flat_Modules/AskForOnlinePlayers_generated.rs"]
+mod AskForOnlinePlayers_generated;
+#[path = "../../Flat_Modules/AskForPlayer_generated.rs"]
+mod AskForPlayer_generated;
+
+#[path = "../../Flat_Modules/Message_generated.rs"]
+mod Message_generated;
+#[path = "../../Flat_Modules/SendGameScore_generated.rs"]
+mod SendGameScore_generated;
+
+#[path = "../../Flat_Modules/Player_generated.rs"]
+mod Player_generated;
+
+
+#[path = "../../serialization.rs"]
+mod serialization;
 #[path = "../../networking.rs"]
 mod networking;
 #[path = "../../structures.rs"]
 mod structures;
-#[path = "../../serialization.rs"]
-mod serialization;
 
 extern crate flatbuffers;
+
+pub use crate::networking::game_networking::{send,recv};
 pub use crate::structures::Structures;
-pub use crate::networking::game_networking;
+pub use crate::serialization::Serialization::{unpack_data, ask_for_player, ask_for_game_data, send_game_score};
 
 
+use std::{error::Error};
+use tokio::net::TcpStream;
+use bytes::Bytes;
+use futures::future;
+use std::time::{ Instant, Duration };
+use tokio::time::delay_for;
+use std::sync::{Arc};
+use tokio::sync::Mutex;
+use std::io;
 use colored::*;
 use rand::Rng;
-use std::io;
 
 
-fn get_login() -> (String, String) {
+
+#[macro_use]
+extern crate num_derive;
+
+
+async fn get_login(out_arc: &mut Arc<Structures::OutgoingPackets>, in_arc : &mut Arc<Structures::IncomingPackets>) -> Structures::Player {
+
     let mut name: String = String::new();
     let mut password: String = String::new();
 
     println!("{}","Please insert your Login!".yellow());
     
     io::stdin().read_line(&mut name).expect("Expected string.");
-    let name = name.trim();
+    let name = name.trim().to_string();
 
     if name.len() < 3 {
         panic!("{}{}","I bet your name is not this short,".red()," try again".green().bold());
@@ -77,19 +100,98 @@ fn get_login() -> (String, String) {
     println!("Hello [ {} ] {}",&name.red().bold(),"Please insert your password!".yellow());
     
     io::stdin().read_line(&mut password).expect("Expected string.");
-    let password = password.trim();
+    let password = password.trim().to_string();
 
     if password.len() < 3 {
         panic!("{}{}","Use a stronger password please,".red()," try again".green().bold());
+    }  
+
+    let mut outgoint_packets = Arc::clone(out_arc);
+    let mut incoming_packets = Arc::clone(in_arc);
+
+    loop {
+        send_packet(&mut outgoint_packets, ask_for_player(&name, &password)).await;
+        delay_for(Duration::from_secs(1)).await;
+        println!("Awaiting for login");
+        let packets = receive_packets(&mut incoming_packets).await;
+
+        for packet in packets.iter() {
+            if let Structures::PacketTypes::AnswerPlayer{status, player} = packet {
+                if let Structures::StatusAnswerPlayer::OkNew = status {
+                    println!("{}","New player!".green());
+                    
+                    return Structures::Player{
+                        name: player.name.to_string(),
+                        auth_token: player.auth_token.to_string(),
+                        password: player.password.to_string(),
+                        score: player.score,
+                        is_admin: player.is_admin
+                    };
+
+                } else if let Structures::StatusAnswerPlayer::OkLogin = status{
+                    println!("{}","Welcome back!".purple());
+
+                    return Structures::Player{
+                        name: player.name.to_string(),
+                        auth_token: player.auth_token.to_string(),
+                        password: player.password.to_string(),
+                        score: player.score,
+                        is_admin: player.is_admin
+                    };
+                } else {
+                    println!("Incorrect password");
+                }
+            }
+        }       
+        
     }
-
-    
-
-    (name.to_string(), password.to_string())
 }
 
 
-fn get_guesses(low: &i32, high: &i32) -> Result<Vec<i32>,()> {
+async fn get_game_data(player : &Structures::Player, out_arc: &mut Arc<Structures::OutgoingPackets>, in_arc : &mut Arc<Structures::IncomingPackets>) 
+-> (u32,u32,u32){
+    
+    let mut outgoint_packets = Arc::clone(out_arc);
+    let mut incoming_packets = Arc::clone(in_arc);
+
+    loop {
+        send_packet(&mut outgoint_packets, ask_for_game_data(&player)).await;
+        delay_for(Duration::from_secs(1)).await;
+        println!("Awaiting for game data");
+        let packets = receive_packets(&mut incoming_packets).await;
+
+        for packet in packets.iter() {
+            if let Structures::PacketTypes::AnswerGameData{ motd, low,
+                high, games} = packet {
+                
+                println!("{}\n{}", "---- ## Message of the day ## ----".red(),motd.green());
+               
+                return (*low,*high,*games);
+
+
+            }
+        }       
+        
+    }
+}
+
+
+async fn send_gamescore(match_score : &Structures::MatchScore, player : &Structures::Player,
+     out_arc: &mut Arc<Structures::OutgoingPackets>){
+
+    let mut outgoint_packets = Arc::clone(out_arc);
+
+    println!("{}","Please inser your score message!".yellow());
+    let mut message: String = String::new();
+    io::stdin().read_line(&mut message).expect("Expected string.");
+    let message = message.trim().to_string();
+
+    send_packet(&mut outgoint_packets, send_game_score(&player, &match_score, message)).await;
+    delay_for(Duration::from_secs(1)).await;        
+
+}
+
+fn get_guesses(low: u32, high: u32) -> Result<Vec<u32>,()> {
     
     let mut str_input = String::new();
 
@@ -102,8 +204,7 @@ fn get_guesses(low: &i32, high: &i32) -> Result<Vec<i32>,()> {
         return Err(());
     }
 
-
-    let mut guesses : Vec<i32> = Vec::new();
+    let mut guesses : Vec<u32> = Vec::new();
 
     for i in str_numbers.iter(){
         let n = i.parse();
@@ -113,7 +214,7 @@ fn get_guesses(low: &i32, high: &i32) -> Result<Vec<i32>,()> {
         }
         let n = n.unwrap();
 
-        if n < *low || n >= *high {
+        if n < low || n >= high {
             println!("{}{}",format!("Oh no no, the number should be bigger than {} and lower than {},",low,high).red().bold(),
             " try again".green().bold());
             return Err(());
@@ -125,17 +226,11 @@ fn get_guesses(low: &i32, high: &i32) -> Result<Vec<i32>,()> {
 }
 
 
-fn check_guesses(guesses : &Vec<i32>, player : &mut Structures::Player, low: &i32, high: &i32){
-    let mut rng = rand::thread_rng();
-    
-    let mut match_score = Structures::MatchScore {
-        hits : 0,
-        specials: 0,
-        misses: 0,
-        score: 0,
-    };
+fn check_guesses(guesses : &Vec<u32>, player : &mut Structures::Player, low: u32, high: u32, match_score : &mut Structures::MatchScore){
+    let mut rng = rand::thread_rng();  
 
-    let mut sum = 0;
+
+    let mut sum: i64 = 0;
 
     for (i, &val) in guesses.iter().enumerate() {
         let rand = rng.gen_range(low,high);
@@ -157,66 +252,122 @@ fn check_guesses(guesses : &Vec<i32>, player : &mut Structures::Player, low: &i3
 
     match_score.score = if sum % 2 == 0 { sum } else { 
         println!("Extra point for score being ODD");
-        sum +1 
+        sum + 1 
     };
 
-    player.game_score.hits += match_score.hits;
-    player.game_score.misses += match_score.misses;
-    player.game_score.score += match_score.score;
-    player.game_score.specials += match_score.specials;
+    
+
     
 }
 
+async fn receive_packets(mut packets : &mut Arc<Structures::IncomingPackets>) -> Vec<Structures::PacketTypes>{
+
+    let mut processed_packets = Vec::new();
+    let mut received_packets = packets.data.lock().await;
+    println!("Size {:?}",received_packets.len());
+    for packet in received_packets.iter() {
+        processed_packets.push(unpack_data(packet));
+        println!("Received: {:?}",&processed_packets[processed_packets.len()-1]);
+    }
+    received_packets.clear();
+    processed_packets
+}
+
+async fn send_packet(packets_arc: &mut Arc<Structures::OutgoingPackets>, data: bytes::Bytes){
+    let mut packets = packets_arc.data.lock().await;
+    packets.push(data);    
+}
+
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+
+
+    //------ NETWORKING
+
+
+    let mut incoming : Structures::Packets = Vec::new();
+    let mut incoming_packets = Arc::new(Structures::IncomingPackets {
+        data: Mutex::new(incoming)
+    });
+
+    let mut outgoing :  Structures::Packets = Vec::new();
+    let mut outgoint_packets = Arc::new(Structures::OutgoingPackets {
+        data: Mutex::new(outgoing)
+    });
+    let mut thread_incoming_packets = Arc::clone(&incoming_packets);
+    let mut thread_outgoint_packets = Arc::clone(&outgoint_packets);
+
+    let thread = tokio::spawn(async move {
+
+        let mut stream = TcpStream::connect("127.0.0.1:8080").await.unwrap();
+        
+        let (mut r, mut w) = stream.split();
+        let mut rarc = Arc::new(Mutex::new(& mut r));
+        let mut warc = Arc::new(Mutex::new(& mut w)); 
+    
+        future::try_join(send(warc.clone(), &mut thread_outgoint_packets), recv(rarc.clone(), &mut thread_incoming_packets)).await;
+    });   
+
+ 
+    /*loop {
+        delay_for(Duration::from_secs(1)).await;
+        println!("At same time");
+        receive_packets(&mut incoming_packets).await;
+        send_packet(&mut outgoint_packets, ask_for_player(&"angelo".to_string(), &"abc".to_string())).await;
+    }
+*/
+
+    //------ NETWORKING
 
 
 
-fn main() {  
     println!("Welcome to the Online {} Gambling game!", "Hackable".black());
     println!("{}","Notes: Absolutely no bruteforce is needed to solve any Flags! \nplease don't spam the server, have fun!".blue());
     
-    let (name, password) = get_login();
-    let games = 3;
-    let low = 1;
-    let high = 7;
-    
+    let mut player = get_login(&mut outgoint_packets,&mut incoming_packets).await;
+    let (low,high,games) = get_game_data(&player, &mut outgoint_packets,&mut incoming_packets).await;
+
     //game_networking::ask_for_player(&name, &password);
 
-    println!("\n\n {}, {}","Hello".green(),name.red());
+    println!("\n\n {}, {}","Hello".green(),player.name.red());
     println!("{} {} {}","We will play".yellow() ,games,"rounds of Guess the number! (With special numbers)".yellow());
     println!("For each round, you have to guess 5 random numbers from {} in sequence,
-     \ntry guessing by inputting 5 numbers separated by space!", format!("{}-{}",low,high-1).red().bold());
+     \ntry guessing by inputting all 5 numbers separated by space!", format!("{}-{}",low,high-1).red().bold());
 
-    let mut player = Structures::Player {
-        name,
-        ..Default::default()   
-    };
 
     //GameNetworking::send_message(&player, String::from("Wow"), Structures::Color::Red);
     
-    let mut count : i32 = 0;
+    let mut count : u32 = 0;
+
+    let mut match_score = Structures::MatchScore {
+        hits : 0,
+        specials: 0,
+        misses: 0,
+        score: 0,
+    };
 
     while count < games {
 
         println!("{} {}","Ok, fire your 5 guesses for game: ".yellow(),count);
-        let guesses = get_guesses(&low,&high);
+        let guesses = get_guesses(low,high);
 
         if let Err(_) = guesses {
             continue;
         }
 
         println!("You entered: {:?}", &guesses);
-        check_guesses(&guesses.unwrap(), &mut player, &low, &high);
+        check_guesses(&guesses.unwrap(), &mut player, low, high, &mut match_score);
 
         count += 1;
     }
+    send_gamescore(&match_score, &player, &mut outgoint_packets).await;
 
 
-    println!("End - Hits: {} Espc: {} Miss: {} -- Game Score: {}",&player.game_score.hits,
-    &player.game_score.specials,&player.game_score.misses,&player.game_score.score);
 
-    //println!("Games score!: {}", &player.total_score);
 
-    //GameNetworking::send_score(&player, String::from("Wow"));
+    println!("End --- Game Score: {}",&player.score);
 
+    Ok(())
 
 }

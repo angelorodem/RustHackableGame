@@ -9,6 +9,9 @@ use std::cmp::Ordering;
 extern crate flatbuffers;
 use self::flatbuffers::EndianScalar;
 
+use num_derive::{FromPrimitive, ToPrimitive};    
+use num_traits::{FromPrimitive, ToPrimitive};
+#[derive(FromPrimitive)]
 #[allow(non_camel_case_types)]
 #[repr(i8)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]

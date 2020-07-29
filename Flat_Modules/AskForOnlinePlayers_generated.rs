@@ -44,13 +44,13 @@ impl<'a> AskForOnlinePlayers<'a> {
     pub const VT_SEQUENCE: flatbuffers::VOffsetT = 4;
 
   #[inline]
-  pub fn sequence(&self) -> i32 {
-    self._tab.get::<i32>(AskForOnlinePlayers::VT_SEQUENCE, Some(0)).unwrap()
+  pub fn sequence(&self) -> u32 {
+    self._tab.get::<u32>(AskForOnlinePlayers::VT_SEQUENCE, Some(0)).unwrap()
   }
 }
 
 pub struct AskForOnlinePlayersArgs {
-    pub sequence: i32,
+    pub sequence: u32,
 }
 impl<'a> Default for AskForOnlinePlayersArgs {
     #[inline]
@@ -66,8 +66,8 @@ pub struct AskForOnlinePlayersBuilder<'a: 'b, 'b> {
 }
 impl<'a: 'b, 'b> AskForOnlinePlayersBuilder<'a, 'b> {
   #[inline]
-  pub fn add_sequence(&mut self, sequence: i32) {
-    self.fbb_.push_slot::<i32>(AskForOnlinePlayers::VT_SEQUENCE, sequence, 0);
+  pub fn add_sequence(&mut self, sequence: u32) {
+    self.fbb_.push_slot::<u32>(AskForOnlinePlayers::VT_SEQUENCE, sequence, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> AskForOnlinePlayersBuilder<'a, 'b> {

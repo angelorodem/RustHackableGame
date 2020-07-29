@@ -1,6 +1,6 @@
 //only accept one ask with same sequence
 table AskForOnlinePlayers {
-    sequence: int32;
+    sequence: uint32;
 }
 
 root_type AskForOnlinePlayers;

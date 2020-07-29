@@ -16,31 +16,46 @@
 
 #[allow(non_snake_case, dead_code, unused_imports)]
 
-#[path = "../../../Flat_Modules/AskForPlayer_generated.rs"]
-mod AskForPlayer_generated;
-#[path = "../../../Flat_Modules/AnswerGameData_generated.rs"]
-mod AnswerGameData_generated;
-#[path = "../../../Flat_Modules/GameResult_generated.rs"]
-mod GameResult_generated;
-#[path = "../../../Flat_Modules/Message_generated.rs"]
-mod Message_generated;
-#[path = "../../../Flat_Modules/OnlinePlayers_generated.rs"]
-mod OnlinePlayers_generated;
-#[path = "../../../Flat_Modules/Player_generated.rs"]
-mod Player_generated;
-#[path = "../../../Flat_Modules/AnswerPlayer_generated.rs"]
-mod AnswerPlayer_generated;
-#[path = "../../../Flat_Modules/SendPlayerGameScore_generated.rs"]
-mod SendPlayerGameScore_generated;
 #[path = "../../../Flat_Modules/GenericPacket_generated.rs"]
 mod GenericPacket_generated;
 
-extern crate flatbuffers;
+#[path = "../../../Flat_Modules/AnswerGameData_generated.rs"]
+mod AnswerGameData_generated;
+#[path = "../../../Flat_Modules/AnswerOnlinePlayers_generated.rs"]
+mod AnswerOnlinePlayers_generated;
+#[path = "../../../Flat_Modules/AnswerPlayer_generated.rs"]
+mod AnswerPlayer_generated;
+
+#[path = "../../../Flat_Modules/AskForGameData_generated.rs"]
+mod AskForGameData_generated;
+#[path = "../../../Flat_Modules/AskForOnlinePlayers_generated.rs"]
+mod AskForOnlinePlayers_generated;
+#[path = "../../../Flat_Modules/AskForPlayer_generated.rs"]
+mod AskForPlayer_generated;
+
+#[path = "../../../Flat_Modules/Message_generated.rs"]
+mod Message_generated;
+#[path = "../../../Flat_Modules/SendGameScore_generated.rs"]
+mod SendGameScore_generated;
+
+#[path = "../../../Flat_Modules/Player_generated.rs"]
+mod Player_generated;
 
 use std::{error::Error};
+use std::sync::{Arc};
+use tokio::sync::Mutex;
 use tokio::net::TcpStream;
+use futures::{future};
 use bytes::Bytes;
-use futures::future;
+
+use std::io;
+use std::time::{ Instant, Duration };
+use tokio::time::delay_for;
+
+
+
+extern crate flatbuffers;
+
 
 #[path = "../../../serialization.rs"]
 mod serialization;
@@ -53,13 +68,14 @@ pub use crate::networking::game_networking::{send,recv};
 pub use crate::structures::Structures;
 pub use crate::serialization::Serialization::{unpack_data, ask_for_player};
 
-use std::time::{ Instant, Duration };
-use tokio::time::delay_for;
+
 
 #[macro_use]
 extern crate num_derive;
 
-async fn handle_receive_packets(received_packets : &mut Structures::Packets){
+async fn handle_receive_packets(mut packets : &mut Arc<Structures::IncomingPackets>){
+
+    let mut received_packets = packets.data.lock().await;
     println!("Size {:?}",received_packets.len());
     for packet in received_packets.iter() {
         let ret = unpack_data(packet);
@@ -71,24 +87,42 @@ async fn handle_receive_packets(received_packets : &mut Structures::Packets){
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let mut stream = TcpStream::connect("127.0.0.1:8080").await?;
-    let (mut in_half, mut out_half) = stream.split();
 
-    //
-    let mut send_packets : Structures::Packets = Vec::new();
-    send_packets.push(ask_for_player(&"angelo".to_string(), &"abc".to_string()));
-    //send_packets.push(Bytes::from("aa"));
+    let mut inc : Structures::Packets = Vec::new();
+    inc.push(ask_for_player(&"angelo".to_string(), &"abc".to_string()));
 
-    let mut receive_packets : Structures::Packets = Vec::new();
+    let mut incoming_packets = Arc::new(Structures::IncomingPackets {
+        data: Mutex::new(inc)
+    });
+
+    let mut outg :  Structures::Packets = Vec::new();
+    outg.push(ask_for_player(&"angelo".to_string(), &"abc".to_string()));
+    let mut outgoint_packets = Arc::new(Structures::OutgoingPackets {
+        data: Mutex::new(outg)
+    });
+
+    let mut local_incoming_packets = Arc::clone(&incoming_packets);
+    let mut local_outgoint_packets = Arc::clone(&outgoint_packets);
+
+    tokio::spawn(async move {
+        let mut stream = TcpStream::connect("127.0.0.1:8080").await.unwrap();
+        let (mut r, mut w) = stream.split();
+        let mut rarc = Arc::new(Mutex::new(& mut r));
+        let mut warc = Arc::new(Mutex::new(& mut w)); 
+    
+        future::try_join(send(warc.clone(), &mut local_outgoint_packets), recv(rarc.clone(), &mut local_incoming_packets)).await;
+    });
 
     loop {
         delay_for(Duration::from_secs(1)).await;
-        //println!("{:?}",count);
-        handle_receive_packets(&mut receive_packets).await;
-        
-        send(&mut out_half, &mut send_packets).await?;
-        recv(&mut in_half,  &mut receive_packets).await?;
+        println!("At same time");
+
+        handle_receive_packets(&mut incoming_packets).await;
+
     }
+
+
+
 
     Ok(())
 }

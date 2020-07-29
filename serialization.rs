@@ -10,13 +10,19 @@ pub mod Serialization {
     use num_traits::{FromPrimitive, ToPrimitive};
 
     pub use crate::GenericPacket_generated::{GenericPacket, GenericPacketArgs,Data, get_root_as_generic_packet};
+
     pub use crate::AskForPlayer_generated::{AskForPlayer,AskForPlayerArgs, get_root_as_ask_for_player};
+    pub use crate::AskForGameData_generated::{AskForGameData, AskForGameDataArgs, get_root_as_ask_for_game_data};
+    pub use crate::AskForOnlinePlayers_generated::{AskForOnlinePlayers, AskForOnlinePlayersArgs, get_root_as_ask_for_online_players};
+ 
+    pub use crate::AnswerPlayer_generated::{AnswerPlayer, AnswerPlayerArgs, get_root_as_answer_player, StatusAnswerPlayer};
+    pub use crate::AnswerGameData_generated::{AnswerGameData, AnswerGameDataArgs, get_root_as_answer_game_data};
+    pub use crate::AnswerOnlinePlayers_generated::{AnswerOnlinePlayers, AnswerOnlinePlayersArgs, get_root_as_answer_online_players};
+
     pub use crate::Message_generated::{Message, MessageArgs,Color, get_root_as_message};
     pub use crate::Player_generated::{Player, PlayerArgs, get_root_as_player};
-    pub use crate::SendPlayerGameScore_generated::{SendGameScore, SendGameScoreArgs, get_root_as_send_game_score};
-    pub use crate::GameResult_generated::{GameResult, GameResultArgs, get_root_as_game_result};
-    pub use crate::AnswerPlayer_generated::{AnswerPlayer, AnswerPlayerArgs, get_root_as_answer_player, StatusAnswerPlayer};
-    pub use crate::GameData_generated::{GameData, GameDataArgs, get_root_as_game_data};
+    pub use crate::SendGameScore_generated::{SendGameScore, SendGameScoreArgs, GameResult, get_root_as_send_game_score};
+
 
 
     //Unpacks Generic Packets
@@ -43,7 +49,7 @@ pub mod Serialization {
         }
 
         let recived_packed = get_root_as_generic_packet(&true_data);
-        //AskForPlayer, GameData, Message, OnlinePlayers, ReceivePlayer, SendGameScore
+        // AskForPlayer, AskForGameData, AskForOnlinePlayers,AnswerGameData, AnswerPlayer, AnswerOnlinePlayers, SendGameScore, Message
         match recived_packed.data_type() {
             Data::AskForPlayer => {
                 println!("Received: AskForPlayer");   
@@ -51,32 +57,49 @@ pub mod Serialization {
                 return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
                     , password: ask_for_player.password().unwrap().to_string()};
             },
-            Data::GameData => {
-                println!("Received: GameData");
+            Data::AskForGameData => {
+                println!("Received: AskForGameData");
+
+                let ask_for_gamedata =   recived_packed.data_as_ask_for_game_data().unwrap(); 
+
+                let player = ask_for_gamedata.player().unwrap();
+                let player_struct = Structures::Player{                    
+                    name: player.name().to_string(),
+                    auth_token: player.auth_token().unwrap_or("").to_string(),
+                    password: player.password().unwrap_or("").to_string(),
+                    score: player.score(),
+                    is_admin: player.is_admin()
+                };
+
+
+                return Structures::PacketTypes::AskForGameData{player:player_struct};
+                    
+            },
+            Data::AskForOnlinePlayers =>  { //ok
+                println!("Received: AskForOnlinePlayers");
                 let ask_for_player =   recived_packed.data_as_ask_for_player().unwrap(); 
                 return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
                     , password: ask_for_player.password().unwrap().to_string()};
             },
-            Data::Message => {
-                println!("Received: Message");
-                let ask_for_player =   recived_packed.data_as_ask_for_player().unwrap(); 
-                return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
-                    , password: ask_for_player.password().unwrap().to_string()};
+
+            Data::AnswerGameData =>  { //ok
+                println!("Received: AnswerGameData");
+                let answer_gamedata =  recived_packed.data_as_answer_game_data().unwrap();
+
+
+                return Structures::PacketTypes::AnswerGameData{ motd:answer_gamedata.motd().unwrap_or("").to_string(),
+                 low: answer_gamedata.low(), high: answer_gamedata.high(), games:answer_gamedata.games()};
+                /*return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
+                    , password: ask_for_player.password().unwrap().to_string()};*/
             },
-            Data::OnlinePlayers =>  {
-                println!("Received: OnlinePlayers");
-                let ask_for_player =   recived_packed.data_as_ask_for_player().unwrap(); 
-                return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
-                    , password: ask_for_player.password().unwrap().to_string()};
-            },
-            Data::AnswerPlayer => {
-                println!("Received: ReceivePlayer");
+            Data::AnswerPlayer => { //ok
+                println!("Received: AnswerPlayer");
                 //ReceivePlayer{status: StatusReceivePlayer, player: Player},
                 let receive_player = recived_packed.data_as_answer_player().unwrap(); 
 
                 let status = FromPrimitive::from_i32(receive_player.status() as i32).unwrap();
-                let player = receive_player.player().unwrap();
 
+                let player = receive_player.player().unwrap();
                 let player_struct = Structures::Player{                    
                     name: player.name().to_string(),
                     auth_token: player.auth_token().unwrap_or("").to_string(),
@@ -87,8 +110,45 @@ pub mod Serialization {
 
                 return Structures::PacketTypes::AnswerPlayer{status: status , player: player_struct};
             },
-            Data::SendGameScore => {
+            Data::AnswerOnlinePlayers =>  { 
+                println!("Received: AnswerOnlinePlayers");
+                let ask_for_player =   recived_packed.data_as_ask_for_player().unwrap(); 
+                return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
+                    , password: ask_for_player.password().unwrap().to_string()};
+            },
+            
+            Data::SendGameScore => { //ok
                 println!("Received: SendGameScore");
+                let gamescore =   recived_packed.data_as_send_game_score().unwrap(); 
+
+                let player = gamescore.player().unwrap();
+                let player_struct = Structures::Player{                    
+                    name: player.name().to_string(),
+                    auth_token: player.auth_token().unwrap_or("").to_string(),
+                    password: player.password().unwrap_or("").to_string(),
+                    score: player.score(),
+                    is_admin: player.is_admin()
+                };
+
+                let ms = gamescore.game_result().unwrap();
+                let matchscore_struct = Structures::MatchScore {
+                    hits: ms.hits(),
+                    specials: ms.specials(),
+                    misses: ms.misses(),
+                    score: ms.score()
+                };
+
+                return Structures::PacketTypes::SendGameScore{player: player_struct,
+                     game_result: matchscore_struct,
+                      score_message: gamescore.score_message().unwrap_or("").to_string()};
+
+
+
+               /* return Structures::PacketTypes::AnswerGameData{ motd:answer_gamedata.motd().unwrap_or("").to_string(),
+                 low: answer_gamedata.low(), high: answer_gamedata.high(), games:answer_gamedata.games()}; */
+            },
+            Data::Message => {
+                println!("Received: Message");
                 let ask_for_player =   recived_packed.data_as_ask_for_player().unwrap(); 
                 return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
                     , password: ask_for_player.password().unwrap().to_string()};
@@ -115,6 +175,22 @@ pub mod Serialization {
         bytes::Bytes::from(builder.finished_data().to_vec())        
     }
 
+    fn create_player_data<'a>(player_p: &Structures::Player, mut builder: flatbuffers::FlatBufferBuilder<'a>)
+    -> (flatbuffers::FlatBufferBuilder<'a>, flatbuffers::WIPOffset<Player<'a>>)   {
+        // alterar tb em online players
+        let fplayer_name = builder.create_string(&player_p.name);
+        let fplayer_token = builder.create_string(&player_p.auth_token);
+
+        let fplayer = Player::create(&mut builder, &PlayerArgs{
+            name: Some(fplayer_name),
+            auth_token: Some(fplayer_token),
+            ..Default::default()
+        });
+
+        (builder, fplayer)
+    }
+
+
     pub fn ask_for_player(name: &String, password: &String) -> bytes::Bytes{
         let mut builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
 
@@ -127,23 +203,98 @@ pub mod Serialization {
         });
 
         pack_data(afp_data, builder, Data::AskForPlayer)
-    }
+    } 
 
-    fn create_player_data<'a>(player_p: &Structures::Player, mut builder: flatbuffers::FlatBufferBuilder<'a>)
-                    -> (flatbuffers::FlatBufferBuilder<'a>, flatbuffers::WIPOffset<Player<'a>>)
-    {
+    pub fn ask_for_game_data(player_p: &Structures::Player) -> bytes::Bytes {
+        let mut builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
+        let (mut builder, fplayer) =  create_player_data(&player_p, builder);
 
-        let fplayer_name = builder.create_string(&player_p.name);
-        let fplayer_token = builder.create_string(&player_p.auth_token);
-
-        let fplayer = Player::create(&mut builder, &PlayerArgs{
-            name: Some(fplayer_name),
-            auth_token: Some(fplayer_token),
-            ..Default::default()
+        let fask_game_data = AskForGameData::create(&mut builder, &AskForGameDataArgs {
+            player: Some(fplayer)
         });
 
-        (builder, fplayer)
+        pack_data(fask_game_data, builder, Data::AskForGameData)
     }
+
+
+    pub fn ask_for_online_players(sequence_p: u32) -> bytes::Bytes {
+        let mut builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
+
+        let fask_online_players = AskForOnlinePlayers::create(&mut builder, &AskForOnlinePlayersArgs{
+            sequence: sequence_p
+        });
+
+        pack_data(fask_online_players, builder, Data::AskForOnlinePlayers)
+    }
+    
+
+
+    pub fn answer_player(player_p: &Structures::Player, status_p: &Structures::StatusAnswerPlayer) -> bytes::Bytes{
+        let builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
+        let (mut builder, fplayer) =  create_player_data(&player_p, builder);
+
+        //StatusAnswerPlayer
+        let status = FromPrimitive::from_i32(ToPrimitive::to_i32(status_p).unwrap()).unwrap();
+
+
+        //needs to modify flat generated to add     
+        //    use num_derive::{FromPrimitive, ToPrimitive};    
+        //    use num_traits::{FromPrimitive, ToPrimitive};
+        //#[derive(FromPrimitive)]
+        let fanswer_player = AnswerPlayer::create(&mut builder, &AnswerPlayerArgs{
+            player: Some(fplayer),
+            status: status
+        });
+
+        pack_data(fanswer_player, builder, Data::AnswerPlayer)
+
+    }
+
+    pub fn answer_game_data(motd_p: String, low_p : u32, high_p: u32, games_p: u32) -> bytes::Bytes {
+        let mut builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
+
+        let message = builder.create_string(&motd_p);
+
+        let fgame_data = AnswerGameData::create(&mut builder, &AnswerGameDataArgs{
+            motd: Some(message),
+            low: low_p,
+            high: high_p,
+            games: games_p
+        });
+
+        pack_data(fgame_data, builder, Data::AnswerGameData)
+
+    }
+
+
+    pub fn answer_online_players(players_p : &Vec<Structures::Player>) -> bytes::Bytes {
+        let mut builder = flatbuffers::FlatBufferBuilder::new_with_capacity(4096);
+
+        let mut built_players = Vec::new();
+        for player in players_p.iter() {
+
+            let fplayer_name = builder.create_string(&player.name);
+            let fplayer_password = builder.create_string(&player.password);
+
+            let fplayer = Player::create(&mut builder, &PlayerArgs{
+                name: Some(fplayer_name),
+                password: Some(fplayer_password),
+                ..Default::default()
+            });
+
+            built_players.push(fplayer);
+        }
+
+        let flat_players = builder.create_vector(&built_players[..]);
+
+
+        let fanswer_online_players = AnswerOnlinePlayers::create(&mut builder, &AnswerOnlinePlayersArgs{
+            players: Some(flat_players)
+        });
+
+        pack_data(fanswer_online_players, builder ,Data::AnswerOnlinePlayers)
+    }
+
 
     pub fn message(player_p: &Structures::Player, message: String, color_p: Structures::Color) -> bytes::Bytes {
         let mut builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
@@ -173,60 +324,19 @@ pub mod Serialization {
         let (mut builder, fplayer) =  create_player_data(&player_p, builder);
 
 
-        let fgame_result = GameResult::create(&mut builder, &GameResultArgs{
-            hits: match_score.hits,
-            misses: match_score.misses,
-            specials: match_score.specials,
-            score: match_score.score,
-        });
+        let fgame_result = GameResult::new(match_score.hits, match_score.specials, match_score.misses, match_score.score);
 
         let message = builder.create_string(&score_message);
 
         let score = SendGameScore::create(&mut builder, &SendGameScoreArgs{
             player: Some(fplayer),
-            game_result: Some(fgame_result),
+            game_result: Some(&fgame_result),
             score_message: Some(message)
         });
 
         pack_data(score, builder, Data::SendGameScore)
 
     }
-
-    pub fn answer_player(player_p: &Structures::Player, status_p: &Structures::StatusAnswerPlayer) -> bytes::Bytes{
-        let builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
-        let (mut builder, fplayer) =  create_player_data(&player_p, builder);
-
-        //StatusAnswerPlayer
-        let status = FromPrimitive::from_i32(ToPrimitive::to_i32(status_p).unwrap()).unwrap();
-
-
-        //needs to modify flat generated to add     #[derive(FromPrimitive)]
-        let fanswer_player = AnswerPlayer::create(&mut builder, &AnswerPlayerArgs{
-            player: Some(fplayer),
-            status: status
-        });
-
-        pack_data(fanswer_player, builder, Data::AnswerPlayer)
-
-
-    }
-
-    pub fn game_data(motd: String, low : u32, high: u32, games: u32) -> bytes::Bytes {
-        let builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
-
-        let message = builder.create_string(&motd);
-
-        let fgame_data = GameData::create(&mut builder, GameDataArgs{
-            motd: message,
-            low;
-            high;
-            games;    
-        });
-
-        pack_data(fgame_data, builder, Data::GameData)
-
-    }
-
 
     
     

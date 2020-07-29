@@ -9,14 +9,15 @@ use std::cmp::Ordering;
 extern crate flatbuffers;
 use self::flatbuffers::EndianScalar;
 
-// struct GameResult, aligned to 4
-#[repr(C, align(4))]
+// struct GameResult, aligned to 8
+#[repr(C, align(8))]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct GameResult {
   hits_: u32,
   specials_: u32,
   misses_: u32,
-  score_: i32,
+  padding0__: u32,
+  score_: i64,
 } // pub struct GameResult
 impl flatbuffers::SafeSliceAccess for GameResult {}
 impl<'a> flatbuffers::Follow<'a> for GameResult {
@@ -57,13 +58,14 @@ impl<'b> flatbuffers::Push for &'b GameResult {
 
 
 impl GameResult {
-  pub fn new<'a>(_hits: u32, _specials: u32, _misses: u32, _score: i32) -> Self {
+  pub fn new<'a>(_hits: u32, _specials: u32, _misses: u32, _score: i64) -> Self {
     GameResult {
       hits_: _hits.to_little_endian(),
       specials_: _specials.to_little_endian(),
       misses_: _misses.to_little_endian(),
       score_: _score.to_little_endian(),
 
+      padding0__: 0,
     }
   }
   pub fn hits<'a>(&'a self) -> u32 {
@@ -75,7 +77,7 @@ impl GameResult {
   pub fn misses<'a>(&'a self) -> u32 {
     self.misses_.from_little_endian()
   }
-  pub fn score<'a>(&'a self) -> i32 {
+  pub fn score<'a>(&'a self) -> i64 {
     self.score_.from_little_endian()
   }
 }

@@ -38,26 +38,26 @@ impl<'a> AnswerOnlinePlayers<'a> {
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
         args: &'args AnswerOnlinePlayersArgs<'args>) -> flatbuffers::WIPOffset<AnswerOnlinePlayers<'bldr>> {
       let mut builder = AnswerOnlinePlayersBuilder::new(_fbb);
-      if let Some(x) = args.player { builder.add_player(x); }
+      if let Some(x) = args.players { builder.add_players(x); }
       builder.finish()
     }
 
-    pub const VT_PLAYER: flatbuffers::VOffsetT = 4;
+    pub const VT_PLAYERS: flatbuffers::VOffsetT = 4;
 
   #[inline]
-  pub fn player(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Player<'a>>>> {
-    self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<flatbuffers::ForwardsUOffset<Player<'a>>>>>(AnswerOnlinePlayers::VT_PLAYER, None)
+  pub fn players(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<Player<'a>>>> {
+    self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<flatbuffers::ForwardsUOffset<Player<'a>>>>>(AnswerOnlinePlayers::VT_PLAYERS, None)
   }
 }
 
 pub struct AnswerOnlinePlayersArgs<'a> {
-    pub player: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a , flatbuffers::ForwardsUOffset<Player<'a >>>>>,
+    pub players: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a , flatbuffers::ForwardsUOffset<Player<'a >>>>>,
 }
 impl<'a> Default for AnswerOnlinePlayersArgs<'a> {
     #[inline]
     fn default() -> Self {
         AnswerOnlinePlayersArgs {
-            player: None,
+            players: None,
         }
     }
 }
@@ -67,8 +67,8 @@ pub struct AnswerOnlinePlayersBuilder<'a: 'b, 'b> {
 }
 impl<'a: 'b, 'b> AnswerOnlinePlayersBuilder<'a, 'b> {
   #[inline]
-  pub fn add_player(&mut self, player: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Player<'b >>>>) {
-    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnswerOnlinePlayers::VT_PLAYER, player);
+  pub fn add_players(&mut self, players: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<Player<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AnswerOnlinePlayers::VT_PLAYERS, players);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> AnswerOnlinePlayersBuilder<'a, 'b> {

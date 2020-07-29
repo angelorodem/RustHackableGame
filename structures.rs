@@ -1,7 +1,7 @@
 pub mod Structures {
     
     use bytes::Bytes;
-    use std::sync::{Mutex};
+    use tokio::sync::Mutex;
     use num_derive::{FromPrimitive, ToPrimitive};    
     use num_traits::{FromPrimitive, ToPrimitive};
 
@@ -11,16 +11,15 @@ pub mod Structures {
         pub hits: u32,
         pub specials: u32,
         pub misses: u32,
-        pub score: i32
+        pub score: i64
     }
 
-    #[derive(Debug)]
-    #[derive(Default)]
+    #[derive(Debug,Default,Clone)]
     pub struct Player {
         pub name: String,
         pub auth_token: String,
         pub password: String,
-        pub score: u64,
+        pub score: i64,
         pub is_admin: bool
     }
 
@@ -44,14 +43,27 @@ pub mod Structures {
     #[derive(Debug)]
     pub enum PacketTypes {
         AskForPlayer{name: String, password: String},
-        GameData{ motd: String, low : u32, high: u32, games: u32},
-        Message{text: String,  color: Color, from: Player},
-        OnlinePlayers{players: Vec<Player>},
+        AskForGameData{player: Player},
+        AskForOnlinePlayers{sequence_p: u32},
+
         AnswerPlayer{status: StatusAnswerPlayer, player: Player},
+        AnswerOnlinePlayers{players: Vec<Player>},
+        AnswerGameData{ motd: String, low : u32, high: u32, games: u32},
+
+        Message{text: String,  color: Color, from: Player},        
         SendGameScore{player: Player, game_result: MatchScore, score_message: String},
         None
     }
 
     pub type Packets = Vec<bytes::Bytes>;
+
+    pub struct IncomingPackets {
+        pub data: Mutex<Packets>
+    }
+
+    //Diffrent structs to make more strict wich struct get accessed at certain moment
+    pub struct OutgoingPackets {
+        pub data: Mutex<Packets>
+    }
 
 }
