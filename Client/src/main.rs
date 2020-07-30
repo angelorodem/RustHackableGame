@@ -410,7 +410,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     tokio::spawn(async move {
 
-        let mut stream = TcpStream::connect("127.0.0.1:8080").await.unwrap();
+        //let mut stream = TcpStream::connect("127.0.0.1:8080").await.unwrap();
+        let mut stream = TcpStream::connect("3.236.150.135:8080").await.unwrap();
         
         let (mut r, mut w) = stream.split();
         let mut rarc = Arc::new(Mutex::new(& mut r));

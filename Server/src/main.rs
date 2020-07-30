@@ -142,10 +142,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             referral:0
         });
 
-        plr.insert("XxXDemonLordXxX".to_string(),Structures::Player{
-            name: "XxXDemonLordXxX".to_string(),
+        plr.insert("Kiddo".to_string(),Structures::Player{
+            name: "Kiddo".to_string(),
             auth_token: "".to_string(),
-            password: "SoyBoy9000".to_string(),
+            password: "Kiddo9000".to_string(),
             score: -1051,
             is_admin: false,
             referral: 0
