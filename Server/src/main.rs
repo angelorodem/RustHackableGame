@@ -137,7 +137,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             name: "Tommy Turbo".to_string(),
             auth_token: "".to_string(),
             password: "asdasdasd".to_string(),
-            score: 123,
+            score: 124,
             is_admin: false,
             referral:0
         });
@@ -164,7 +164,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             name: "Hulk Hogan".to_string(),
             auth_token: "".to_string(),
             password: "Brotthar".to_string(),
-            score: 873,
+            score: 874,
             is_admin: false,
             referral: 0
         });
