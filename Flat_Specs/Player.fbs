@@ -4,6 +4,7 @@ table Player {
     password: string;
     score: int64;
     is_admin: bool;
+    referral: int64;
 }
 
 root_type Player;

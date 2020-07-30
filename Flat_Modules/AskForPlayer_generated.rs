@@ -37,6 +37,7 @@ impl<'a> AskForPlayer<'a> {
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
         args: &'args AskForPlayerArgs<'args>) -> flatbuffers::WIPOffset<AskForPlayer<'bldr>> {
       let mut builder = AskForPlayerBuilder::new(_fbb);
+      builder.add_referral(args.referral);
       if let Some(x) = args.password { builder.add_password(x); }
       if let Some(x) = args.name { builder.add_name(x); }
       builder.finish()
@@ -44,6 +45,7 @@ impl<'a> AskForPlayer<'a> {
 
     pub const VT_NAME: flatbuffers::VOffsetT = 4;
     pub const VT_PASSWORD: flatbuffers::VOffsetT = 6;
+    pub const VT_REFERRAL: flatbuffers::VOffsetT = 8;
 
   #[inline]
   pub fn name(&self) -> Option<&'a str> {
@@ -53,11 +55,16 @@ impl<'a> AskForPlayer<'a> {
   pub fn password(&self) -> Option<&'a str> {
     self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(AskForPlayer::VT_PASSWORD, None)
   }
+  #[inline]
+  pub fn referral(&self) -> i64 {
+    self._tab.get::<i64>(AskForPlayer::VT_REFERRAL, Some(0)).unwrap()
+  }
 }
 
 pub struct AskForPlayerArgs<'a> {
     pub name: Option<flatbuffers::WIPOffset<&'a  str>>,
     pub password: Option<flatbuffers::WIPOffset<&'a  str>>,
+    pub referral: i64,
 }
 impl<'a> Default for AskForPlayerArgs<'a> {
     #[inline]
@@ -65,6 +72,7 @@ impl<'a> Default for AskForPlayerArgs<'a> {
         AskForPlayerArgs {
             name: None,
             password: None,
+            referral: 0,
         }
     }
 }
@@ -80,6 +88,10 @@ impl<'a: 'b, 'b> AskForPlayerBuilder<'a, 'b> {
   #[inline]
   pub fn add_password(&mut self, password: flatbuffers::WIPOffset<&'b  str>) {
     self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(AskForPlayer::VT_PASSWORD, password);
+  }
+  #[inline]
+  pub fn add_referral(&mut self, referral: i64) {
+    self.fbb_.push_slot::<i64>(AskForPlayer::VT_REFERRAL, referral, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> AskForPlayerBuilder<'a, 'b> {

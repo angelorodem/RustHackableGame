@@ -1,6 +1,7 @@
 table AskForPlayer {
     name: string;
     password: string;
+    referral: int64;
 }
 
 root_type AskForPlayer;

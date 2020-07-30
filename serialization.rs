@@ -55,7 +55,7 @@ pub mod Serialization {
                 println!("Received: AskForPlayer");   
                 let ask_for_player =   recived_packed.data_as_ask_for_player().unwrap();  
                 return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
-                    , password: ask_for_player.password().unwrap().to_string()};
+                    , password: ask_for_player.password().unwrap().to_string(), referral: ask_for_player.referral()};
             },
             Data::AskForGameData => {
                 println!("Received: AskForGameData");
@@ -68,7 +68,8 @@ pub mod Serialization {
                     auth_token: player.auth_token().unwrap_or("").to_string(),
                     password: player.password().unwrap_or("").to_string(),
                     score: player.score(),
-                    is_admin: player.is_admin()
+                    is_admin: player.is_admin(),
+                    referral: player.referral()
                 };
 
 
@@ -77,9 +78,16 @@ pub mod Serialization {
             },
             Data::AskForOnlinePlayers =>  { //ok
                 println!("Received: AskForOnlinePlayers");
-                let ask_for_player =   recived_packed.data_as_ask_for_player().unwrap(); 
+
+                let answer_onlineplayers =  recived_packed.data_as_ask_for_online_players().unwrap();
+
+
+
+                return Structures::PacketTypes::AskForOnlinePlayers{sequence_p: answer_onlineplayers.sequence()};
+
+                /*let ask_for_player =   recived_packed.data_as_ask_for_player().unwrap(); 
                 return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
-                    , password: ask_for_player.password().unwrap().to_string()};
+                    , password: ask_for_player.password().unwrap().to_string()};*/
             },
 
             Data::AnswerGameData =>  { //ok
@@ -105,16 +113,31 @@ pub mod Serialization {
                     auth_token: player.auth_token().unwrap_or("").to_string(),
                     password: player.password().unwrap_or("").to_string(),
                     score: player.score(),
-                    is_admin: player.is_admin()
+                    is_admin: player.is_admin(),
+                    referral: player.referral()
                 };
 
                 return Structures::PacketTypes::AnswerPlayer{status: status , player: player_struct};
             },
             Data::AnswerOnlinePlayers =>  { 
                 println!("Received: AnswerOnlinePlayers");
-                let ask_for_player =   recived_packed.data_as_ask_for_player().unwrap(); 
-                return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
-                    , password: ask_for_player.password().unwrap().to_string()};
+                let answer_onlineplayers =   recived_packed.data_as_answer_online_players().unwrap(); 
+                let players = answer_onlineplayers.players().unwrap();
+
+                let mut vector_players = Vec::new();
+                for i in 0..players.len() {
+                    let tmp = players.get(i);
+                    vector_players.push(Structures::Player{
+                        name: tmp.name().to_string(),
+                        auth_token: tmp.auth_token().unwrap_or("").to_string(),
+                        password: tmp.password().unwrap_or("").to_string(),
+                        score: tmp.score(),
+                        is_admin: tmp.is_admin(),
+                        referral: tmp.referral()
+                    });
+                }
+
+                return Structures::PacketTypes::AnswerOnlinePlayers{players: vector_players};
             },
             
             Data::SendGameScore => { //ok
@@ -127,7 +150,8 @@ pub mod Serialization {
                     auth_token: player.auth_token().unwrap_or("").to_string(),
                     password: player.password().unwrap_or("").to_string(),
                     score: player.score(),
-                    is_admin: player.is_admin()
+                    is_admin: player.is_admin(),
+                    referral: player.referral()
                 };
 
                 let ms = gamescore.game_result().unwrap();
@@ -149,9 +173,30 @@ pub mod Serialization {
             },
             Data::Message => {
                 println!("Received: Message");
-                let ask_for_player =   recived_packed.data_as_ask_for_player().unwrap(); 
-                return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
-                    , password: ask_for_player.password().unwrap().to_string()};
+                let message_serial =   recived_packed.data_as_message().unwrap(); 
+
+                let player = message_serial.from().unwrap();
+                let player_struct = Structures::Player{                    
+                    name: player.name().to_string(),
+                    auth_token: player.auth_token().unwrap_or("").to_string(),
+                    password: player.password().unwrap_or("").to_string(),
+                    score: player.score(),
+                    is_admin: player.is_admin(),
+                    referral: player.referral()
+                };
+
+                let fcolor = match message_serial.color() {
+                    Color::Blue => Structures::Color::Blue,
+                    Color::Green => Structures::Color::Green,
+                    Color::Red => Structures::Color::Red
+                };
+
+                let message = message_serial.text().to_string();
+
+
+                return Structures::PacketTypes::Message{text: message,  color: fcolor, from: player_struct};
+                /*return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
+                    , password: ask_for_player.password().unwrap().to_string()};*/
             },
             _ => {
                 println!("Received: None");
@@ -184,6 +229,7 @@ pub mod Serialization {
         let fplayer = Player::create(&mut builder, &PlayerArgs{
             name: Some(fplayer_name),
             auth_token: Some(fplayer_token),
+            referral: player_p.referral,
             ..Default::default()
         });
 
@@ -191,7 +237,7 @@ pub mod Serialization {
     }
 
 
-    pub fn ask_for_player(name: &String, password: &String) -> bytes::Bytes{
+    pub fn ask_for_player(name: &String, password: &String, referral: i64) -> bytes::Bytes{
         let mut builder = flatbuffers::FlatBufferBuilder::new_with_capacity(512);
 
         let fname = builder.create_string(&name);
@@ -199,7 +245,8 @@ pub mod Serialization {
 
         let afp_data = AskForPlayer::create(&mut builder, &AskForPlayerArgs{
             name: Some(fname),
-            password: Some(fpassword)
+            password: Some(fpassword),
+            referral: referral
         });
 
         pack_data(afp_data, builder, Data::AskForPlayer)
@@ -273,12 +320,16 @@ pub mod Serialization {
         let mut built_players = Vec::new();
         for player in players_p.iter() {
 
+            println!("{:#?}",&player);
+
             let fplayer_name = builder.create_string(&player.name);
             let fplayer_password = builder.create_string(&player.password);
 
             let fplayer = Player::create(&mut builder, &PlayerArgs{
                 name: Some(fplayer_name),
                 password: Some(fplayer_password),
+                is_admin: player.is_admin,
+                score: player.score,
                 ..Default::default()
             });
 

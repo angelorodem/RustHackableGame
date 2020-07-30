@@ -37,6 +37,7 @@ impl<'a> Player<'a> {
         _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
         args: &'args PlayerArgs<'args>) -> flatbuffers::WIPOffset<Player<'bldr>> {
       let mut builder = PlayerBuilder::new(_fbb);
+      builder.add_referral(args.referral);
       builder.add_score(args.score);
       if let Some(x) = args.password { builder.add_password(x); }
       if let Some(x) = args.auth_token { builder.add_auth_token(x); }
@@ -50,6 +51,7 @@ impl<'a> Player<'a> {
     pub const VT_PASSWORD: flatbuffers::VOffsetT = 8;
     pub const VT_SCORE: flatbuffers::VOffsetT = 10;
     pub const VT_IS_ADMIN: flatbuffers::VOffsetT = 12;
+    pub const VT_REFERRAL: flatbuffers::VOffsetT = 14;
 
   #[inline]
   pub fn name(&self) -> &'a str {
@@ -71,6 +73,10 @@ impl<'a> Player<'a> {
   pub fn is_admin(&self) -> bool {
     self._tab.get::<bool>(Player::VT_IS_ADMIN, Some(false)).unwrap()
   }
+  #[inline]
+  pub fn referral(&self) -> i64 {
+    self._tab.get::<i64>(Player::VT_REFERRAL, Some(0)).unwrap()
+  }
 }
 
 pub struct PlayerArgs<'a> {
@@ -79,6 +85,7 @@ pub struct PlayerArgs<'a> {
     pub password: Option<flatbuffers::WIPOffset<&'a  str>>,
     pub score: i64,
     pub is_admin: bool,
+    pub referral: i64,
 }
 impl<'a> Default for PlayerArgs<'a> {
     #[inline]
@@ -89,6 +96,7 @@ impl<'a> Default for PlayerArgs<'a> {
             password: None,
             score: 0,
             is_admin: false,
+            referral: 0,
         }
     }
 }
@@ -116,6 +124,10 @@ impl<'a: 'b, 'b> PlayerBuilder<'a, 'b> {
   #[inline]
   pub fn add_is_admin(&mut self, is_admin: bool) {
     self.fbb_.push_slot::<bool>(Player::VT_IS_ADMIN, is_admin, false);
+  }
+  #[inline]
+  pub fn add_referral(&mut self, referral: i64) {
+    self.fbb_.push_slot::<i64>(Player::VT_REFERRAL, referral, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> PlayerBuilder<'a, 'b> {

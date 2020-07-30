@@ -15,16 +15,19 @@ pub mod Structures {
     }
 
     #[derive(Debug,Default,Clone)]
+    #[derive(PartialEq, Eq)] 
     pub struct Player {
         pub name: String,
         pub auth_token: String,
         pub password: String,
         pub score: i64,
-        pub is_admin: bool
+        pub is_admin: bool,
+        pub referral: i64
     }
 
     #[derive(Debug)]
     #[derive(FromPrimitive)]
+    #[derive(PartialEq, Eq)] 
     pub enum Color  {
         Red = 0,
         Green = 1,
@@ -42,7 +45,7 @@ pub mod Structures {
 
     #[derive(Debug)]
     pub enum PacketTypes {
-        AskForPlayer{name: String, password: String},
+        AskForPlayer{name: String, password: String, referral: i64},
         AskForGameData{player: Player},
         AskForOnlinePlayers{sequence_p: u32},
 

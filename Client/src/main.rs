@@ -62,7 +62,7 @@ extern crate flatbuffers;
 
 pub use crate::networking::game_networking::{send,recv};
 pub use crate::structures::Structures;
-pub use crate::serialization::Serialization::{unpack_data, ask_for_player, ask_for_game_data, send_game_score};
+pub use crate::serialization::Serialization::{unpack_data, ask_for_player, ask_for_game_data, send_game_score, message, ask_for_online_players};
 
 
 use std::{error::Error};
@@ -76,6 +76,7 @@ use tokio::sync::Mutex;
 use std::io;
 use colored::*;
 use rand::Rng;
+use std::process::exit;
 
 
 
@@ -87,14 +88,16 @@ async fn get_login(out_arc: &mut Arc<Structures::OutgoingPackets>, in_arc : &mut
 
     let mut name: String = String::new();
     let mut password: String = String::new();
+    let mut referral_str: String = String::new();
+    
 
     println!("{}","Please insert your Login!".yellow());
     
     io::stdin().read_line(&mut name).expect("Expected string.");
     let name = name.trim().to_string();
 
-    if name.len() < 3 {
-        panic!("{}{}","I bet your name is not this short,".red()," try again".green().bold());
+    if name.len() < 3 || name.len() > 16 {
+        panic!("{}{}","Name too short/long (3-16),".red()," try again".green().bold());
     }
 
     println!("Hello [ {} ] {}",&name.red().bold(),"Please insert your password!".yellow());
@@ -102,15 +105,25 @@ async fn get_login(out_arc: &mut Arc<Structures::OutgoingPackets>, in_arc : &mut
     io::stdin().read_line(&mut password).expect("Expected string.");
     let password = password.trim().to_string();
 
-    if password.len() < 3 {
-        panic!("{}{}","Use a stronger password please,".red()," try again".green().bold());
+    if password.len() < 3 || password.len() > 16{
+        panic!("{}{}","Too short/long password (3-16),".red()," try again".green().bold());
     }  
+
+    println!("Please {} insert your {} link! (ignore if already user)",&name.red().bold(),"referral".yellow());
+    
+    io::stdin().read_line(&mut referral_str).expect("Expected string.");
+    let mut referral: i64 = match referral_str.trim().parse::<i64>() {
+        Ok(t) => t,
+        Err(_) => 0 
+    };
+
+    println!("-----------{}",referral);
 
     let mut outgoint_packets = Arc::clone(out_arc);
     let mut incoming_packets = Arc::clone(in_arc);
 
     loop {
-        send_packet(&mut outgoint_packets, ask_for_player(&name, &password)).await;
+        send_packet(&mut outgoint_packets, ask_for_player(&name, &password, referral)).await;
         delay_for(Duration::from_secs(1)).await;
         println!("Awaiting for login");
         let packets = receive_packets(&mut incoming_packets).await;
@@ -125,7 +138,8 @@ async fn get_login(out_arc: &mut Arc<Structures::OutgoingPackets>, in_arc : &mut
                         auth_token: player.auth_token.to_string(),
                         password: player.password.to_string(),
                         score: player.score,
-                        is_admin: player.is_admin
+                        is_admin: player.is_admin,
+                        referral: player.referral
                     };
 
                 } else if let Structures::StatusAnswerPlayer::OkLogin = status{
@@ -136,10 +150,15 @@ async fn get_login(out_arc: &mut Arc<Structures::OutgoingPackets>, in_arc : &mut
                         auth_token: player.auth_token.to_string(),
                         password: player.password.to_string(),
                         score: player.score,
-                        is_admin: player.is_admin
+                        is_admin: player.is_admin,
+                        referral: player.referral
                     };
-                } else {
-                    println!("Incorrect password");
+                } else if let Structures::StatusAnswerPlayer::Denied = status{
+                    println!("{}","Incorrect password".bold().red());
+                    exit(-1);
+                } else if let Structures::StatusAnswerPlayer::Failure = status{
+                    println!("{}","Incorrect Referral link".bold().red());
+                    exit(-1);
                 }
             }
         }       
@@ -181,15 +200,51 @@ async fn send_gamescore(match_score : &Structures::MatchScore, player : &Structu
 
     let mut outgoint_packets = Arc::clone(out_arc);
 
-    println!("{}","Please inser your score message!".yellow());
+    /*println!("{}","Please inser your score message!".yellow());
     let mut message: String = String::new();
-    io::stdin().read_line(&mut message).expect("Expected string.");
-    let message = message.trim().to_string();
+    io::stdin().read_line(&mut message).expect("Expected string.");*/
+    let message = "".to_string();//message.trim().to_string();
 
     send_packet(&mut outgoint_packets, send_game_score(&player, &match_score, message)).await;
     delay_for(Duration::from_secs(1)).await;        
 
 }
+
+
+async fn receive_message(in_arc : &mut Arc<Structures::IncomingPackets>){
+    let mut incoming_packets = Arc::clone(in_arc);
+
+ 
+    let mut packets = receive_packets(&mut incoming_packets).await;
+
+
+    packets.retain(|packet|{
+        if let Structures::PacketTypes::Message{ text,  color, from} = packet {
+            
+            let message = match color {
+                Structures::Color::Blue => text.blue(),
+                Structures::Color::Green => text.green(),
+                Structures::Color::Red => text.red()
+            };
+
+            println!("Message from: [{}] - {}", from.name, message);
+    
+            return false;
+        }
+        true
+    })        
+}
+
+
+async fn send_message(player: &Structures::Player, message_p: String, out_arc: &mut Arc<Structures::OutgoingPackets>){
+    let mut outgoint_packets = Arc::clone(out_arc);
+
+    send_packet(out_arc, message(player, message_p, Structures::Color::Blue) ).await;       
+}
+
+
+
+
 
 fn get_guesses(low: u32, high: u32) -> Result<Vec<u32>,()> {
     
@@ -254,20 +309,16 @@ fn check_guesses(guesses : &Vec<u32>, player : &mut Structures::Player, low: u32
         println!("Extra point for score being ODD");
         sum + 1 
     };
-
-    
-
-    
 }
 
 async fn receive_packets(mut packets : &mut Arc<Structures::IncomingPackets>) -> Vec<Structures::PacketTypes>{
 
     let mut processed_packets = Vec::new();
     let mut received_packets = packets.data.lock().await;
-    println!("Size {:?}",received_packets.len());
+    //println!("Size {:?}",received_packets.len());
     for packet in received_packets.iter() {
         processed_packets.push(unpack_data(packet));
-        println!("Received: {:?}",&processed_packets[processed_packets.len()-1]);
+        //println!("Received: {:?}",&processed_packets[processed_packets.len()-1]);
     }
     received_packets.clear();
     processed_packets
@@ -276,6 +327,60 @@ async fn receive_packets(mut packets : &mut Arc<Structures::IncomingPackets>) ->
 async fn send_packet(packets_arc: &mut Arc<Structures::OutgoingPackets>, data: bytes::Bytes){
     let mut packets = packets_arc.data.lock().await;
     packets.push(data);    
+}
+
+
+async fn online_players(out_arc: &mut Arc<Structures::OutgoingPackets>, in_arc : &mut Arc<Structures::IncomingPackets>){
+    let mut outgoint_packets = Arc::clone(out_arc);
+    let mut incoming_packets = Arc::clone(in_arc);
+
+    let mut rng = rand::thread_rng(); 
+
+    loop {
+        
+        send_packet(&mut outgoint_packets, ask_for_online_players(rng.gen_range(0,9999999))).await;
+        delay_for(Duration::from_secs(1)).await;
+        println!("Awaiting for Online Players!");
+        let mut packets = receive_packets(&mut incoming_packets).await;
+
+        for packet in packets.iter_mut() {
+            if let Structures::PacketTypes::AnswerOnlinePlayers{players} = packet {
+                println!("{}\n{}","\n\nOther great people are also playing! check them out!".bold().bright_purple(), 
+                "--------------------------------------------------------------------");
+                for mut player in players.iter_mut(){     
+                    
+                    let len_spce = 16 - player.name.len();
+
+                    //another horribe algo right here
+                    for i in 0..len_spce {
+                        player.name.push(' ');
+                    }
+
+
+                    let score_colored = if player.score < 0 {
+                        player.score.to_string().bold().red()
+                    } else {
+                        player.score.to_string().bold().green()
+                    };
+
+                    if player.is_admin {
+                        println!("{}\t\t{}\t{}",player.name.bold().bright_blue(),
+                        score_colored,"[ADMIN]".bold().bright_green());
+                    }else{
+                        println!("{}\t\t{}",player.name.bold().bright_blue(),score_colored);
+                    }                  
+            
+                }
+                println!("\n");
+
+
+               return;
+            }
+        }       
+        
+    }
+
+
 }
 
 
@@ -309,24 +414,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
         future::try_join(send(warc.clone(), &mut thread_outgoint_packets), recv(rarc.clone(), &mut thread_incoming_packets)).await;
     });   
 
- 
-    /*loop {
-        delay_for(Duration::from_secs(1)).await;
-        println!("At same time");
-        receive_packets(&mut incoming_packets).await;
-        send_packet(&mut outgoint_packets, ask_for_player(&"angelo".to_string(), &"abc".to_string())).await;
-    }
-*/
-
-    //------ NETWORKING
-
-
 
     println!("Welcome to the Online {} Gambling game!", "Hackable".black());
-    println!("{}","Notes: Absolutely no bruteforce is needed to solve any Flags! \nplease don't spam the server, have fun!".blue());
+    println!("{}","Notes: Absolutely no bruteforce is needed to hack it! \nplease don't spam the server, have fun!".blue());
+
+
+    online_players(&mut outgoint_packets, &mut incoming_packets).await;
     
     let mut player = get_login(&mut outgoint_packets,&mut incoming_packets).await;
     let (low,high,games) = get_game_data(&player, &mut outgoint_packets,&mut incoming_packets).await;
+
+    if player.referral > 0 {
+        println!("\n{}: {}","Your Referral value is".bold().red(), &player.referral);
+    }
 
     //game_networking::ask_for_player(&name, &password);
 
@@ -359,8 +459,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         println!("You entered: {:?}", &guesses);
         check_guesses(&guesses.unwrap(), &mut player, low, high, &mut match_score);
 
+        //receive_message(&mut incoming_packets).await;
+        //send_message(&player, "I'm Playing too!".to_string(), &mut outgoint_packets).await;
+
         count += 1;
     }
+
+
     send_gamescore(&match_score, &player, &mut outgoint_packets).await;
 
 
