@@ -1,0 +1,18 @@
+/home/oleg/git/RustHackableGame/Server/target/rls/debug/deps/Server-a9ff6c27d1cc6ce8.rmeta: src/main.rs src/../../serialization.rs src/../../networking.rs src/../../structures.rs src/../../Flat_Modules/GenericPacket_generated.rs src/../../Flat_Modules/AnswerGameData_generated.rs src/../../Flat_Modules/AnswerOnlinePlayers_generated.rs src/../../Flat_Modules/AnswerPlayer_generated.rs src/../../Flat_Modules/AskForGameData_generated.rs src/../../Flat_Modules/AskForOnlinePlayers_generated.rs src/../../Flat_Modules/AskForPlayer_generated.rs src/../../Flat_Modules/Message_generated.rs src/../../Flat_Modules/SendGameScore_generated.rs src/../../Flat_Modules/Player_generated.rs
+
+/home/oleg/git/RustHackableGame/Server/target/rls/debug/deps/Server-a9ff6c27d1cc6ce8.d: src/main.rs src/../../serialization.rs src/../../networking.rs src/../../structures.rs src/../../Flat_Modules/GenericPacket_generated.rs src/../../Flat_Modules/AnswerGameData_generated.rs src/../../Flat_Modules/AnswerOnlinePlayers_generated.rs src/../../Flat_Modules/AnswerPlayer_generated.rs src/../../Flat_Modules/AskForGameData_generated.rs src/../../Flat_Modules/AskForOnlinePlayers_generated.rs src/../../Flat_Modules/AskForPlayer_generated.rs src/../../Flat_Modules/Message_generated.rs src/../../Flat_Modules/SendGameScore_generated.rs src/../../Flat_Modules/Player_generated.rs
+
+src/main.rs:
+src/../../serialization.rs:
+src/../../networking.rs:
+src/../../structures.rs:
+src/../../Flat_Modules/GenericPacket_generated.rs:
+src/../../Flat_Modules/AnswerGameData_generated.rs:
+src/../../Flat_Modules/AnswerOnlinePlayers_generated.rs:
+src/../../Flat_Modules/AnswerPlayer_generated.rs:
+src/../../Flat_Modules/AskForGameData_generated.rs:
+src/../../Flat_Modules/AskForOnlinePlayers_generated.rs:
+src/../../Flat_Modules/AskForPlayer_generated.rs:
+src/../../Flat_Modules/Message_generated.rs:
+src/../../Flat_Modules/SendGameScore_generated.rs:
+src/../../Flat_Modules/Player_generated.rs:

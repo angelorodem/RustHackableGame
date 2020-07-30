@@ -1,10 +1,13 @@
 [package]
-name = "Server"
+name = "ServerCTF"
 version = "0.1.0"
 authors = ["Angelo <angelorodem@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[profile.release]
+opt-level = 3
 
 [dependencies]
 rand = "0.7.3"
@@ -18,3 +21,5 @@ byteorder = "1.3.4"
 internet-checksum = "0.2.0"
 num-traits = "0.2"
 num-derive = "0.3"
+bincode = "1.3.1"
+serde = { version = "1.0", features = ["derive"] }

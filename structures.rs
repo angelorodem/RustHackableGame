@@ -1,9 +1,11 @@
 pub mod Structures {
     
-    use bytes::Bytes;
+
     use tokio::sync::Mutex;
     use num_derive::{FromPrimitive, ToPrimitive};    
-    use num_traits::{FromPrimitive, ToPrimitive};
+    use serde::{Serialize, Deserialize};
+
+    extern crate serde;
 
     #[derive(Debug)]
     #[derive(Default)]
@@ -14,8 +16,7 @@ pub mod Structures {
         pub score: i64
     }
 
-    #[derive(Debug,Default,Clone)]
-    #[derive(PartialEq, Eq)] 
+    #[derive(Debug,Default,Clone, PartialEq, Eq, Serialize, Deserialize)] 
     pub struct Player {
         pub name: String,
         pub auth_token: String,

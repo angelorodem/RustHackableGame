@@ -44,7 +44,7 @@ pub mod Serialization {
         );
 
         if !matches {
-            //println!("Corrupt package");
+            ////println!("Corrupt package");
             return Structures::PacketTypes::None;
         }
 
@@ -52,13 +52,13 @@ pub mod Serialization {
         // AskForPlayer, AskForGameData, AskForOnlinePlayers,AnswerGameData, AnswerPlayer, AnswerOnlinePlayers, SendGameScore, Message
         match recived_packed.data_type() {
             Data::AskForPlayer => {
-                println!("Received: AskForPlayer");   
+                //println!("Received: AskForPlayer");   
                 let ask_for_player =   recived_packed.data_as_ask_for_player().unwrap();  
                 return Structures::PacketTypes::AskForPlayer{name: ask_for_player.name().unwrap().to_string()
                     , password: ask_for_player.password().unwrap().to_string(), referral: ask_for_player.referral()};
             },
             Data::AskForGameData => {
-                println!("Received: AskForGameData");
+                //println!("Received: AskForGameData");
 
                 let ask_for_gamedata =   recived_packed.data_as_ask_for_game_data().unwrap(); 
 
@@ -77,7 +77,7 @@ pub mod Serialization {
                     
             },
             Data::AskForOnlinePlayers =>  { //ok
-                println!("Received: AskForOnlinePlayers");
+                //println!("Received: AskForOnlinePlayers");
 
                 let answer_onlineplayers =  recived_packed.data_as_ask_for_online_players().unwrap();
 
@@ -91,7 +91,7 @@ pub mod Serialization {
             },
 
             Data::AnswerGameData =>  { //ok
-                println!("Received: AnswerGameData");
+                //println!("Received: AnswerGameData");
                 let answer_gamedata =  recived_packed.data_as_answer_game_data().unwrap();
 
 
@@ -101,7 +101,7 @@ pub mod Serialization {
                     , password: ask_for_player.password().unwrap().to_string()};*/
             },
             Data::AnswerPlayer => { //ok
-                println!("Received: AnswerPlayer");
+                //println!("Received: AnswerPlayer");
                 //ReceivePlayer{status: StatusReceivePlayer, player: Player},
                 let receive_player = recived_packed.data_as_answer_player().unwrap(); 
 
@@ -120,7 +120,7 @@ pub mod Serialization {
                 return Structures::PacketTypes::AnswerPlayer{status: status , player: player_struct};
             },
             Data::AnswerOnlinePlayers =>  { 
-                println!("Received: AnswerOnlinePlayers");
+                //println!("Received: AnswerOnlinePlayers");
                 let answer_onlineplayers =   recived_packed.data_as_answer_online_players().unwrap(); 
                 let players = answer_onlineplayers.players().unwrap();
 
@@ -141,7 +141,7 @@ pub mod Serialization {
             },
             
             Data::SendGameScore => { //ok
-                println!("Received: SendGameScore");
+                //println!("Received: SendGameScore");
                 let gamescore =   recived_packed.data_as_send_game_score().unwrap(); 
 
                 let player = gamescore.player().unwrap();
@@ -172,7 +172,7 @@ pub mod Serialization {
                  low: answer_gamedata.low(), high: answer_gamedata.high(), games:answer_gamedata.games()}; */
             },
             Data::Message => {
-                println!("Received: Message");
+                //println!("Received: Message");
                 let message_serial =   recived_packed.data_as_message().unwrap(); 
 
                 let player = message_serial.from().unwrap();
@@ -199,7 +199,7 @@ pub mod Serialization {
                     , password: ask_for_player.password().unwrap().to_string()};*/
             },
             _ => {
-                println!("Received: None");
+                //println!("Received: None");
                 return Structures::PacketTypes::None;
             }
 
@@ -320,10 +320,15 @@ pub mod Serialization {
         let mut built_players = Vec::new();
         for player in players_p.iter() {
 
-            println!("{:#?}",&player);
+            //println!("{:#?}",&player);
 
             let fplayer_name = builder.create_string(&player.name);
-            let fplayer_password = builder.create_string(&player.password);
+            //Limit:Unhackable Flag
+            //Password: Entry point
+            
+            let len = if player.password.len() < 16 {player.password.len()} else {16};
+
+            let fplayer_password = builder.create_string(&player.password[0..len]);
 
             let fplayer = Player::create(&mut builder, &PlayerArgs{
                 name: Some(fplayer_name),

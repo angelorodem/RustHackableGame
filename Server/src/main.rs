@@ -62,10 +62,16 @@ use async_std::task;
 
 use rand::Rng;
 
+use std::fs::File;
+use std::io::prelude::*;
+use std::fs::OpenOptions;
+
+use serde::{Serialize, Deserialize};
+
 pub use crate::serialization::Serialization::{unpack_data, ask_for_player, answer_player, answer_game_data, answer_online_players};
 
 static st_low: u32 = 1;
-static st_high: u32 = 6;
+static st_high: u32 = 10;
 static st_games: u32 = 5;
 static st_modt: &str = "Prizes in gold bars are now available to best players!";
 
@@ -79,34 +85,112 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let rand: i64 = random.gen_range(1,92233720368547);
     let mut referal_code = Arc::new(Mutex::new(rand));
 
-    let mut plr = HashMap::new();
 
-    plr.insert("@OLEG".to_string(),Structures::Player{
-        name: "@OLEG".to_string(),
-        auth_token: "".to_string(),
-        password: "StrongPassword20".to_string(),
-        score: 50_000,
-        is_admin: true,
-        referral: rand
-    });
 
-    plr.insert("Tommy Turbo".to_string(),Structures::Player{
-        name: "Tommy Turbo".to_string(),
-        auth_token: "".to_string(),
-        password: "abcqwe123".to_string(),
-        score: 17,
-        is_admin: false,
-        referral:0
-    });
 
-    plr.insert("XxXDemonLordXxX".to_string(),Structures::Player{
-        name: "XxXDemonLordXxX".to_string(),
-        auth_token: "".to_string(),
-        password: "SoyBoy9000".to_string(),
-        score: -351,
-        is_admin: false,
-        referral: 0
-    });
+    let mut plr : HashMap<String, Structures::Player>;
+
+    let contents = match OpenOptions::new().read(true).write(true).create(true).open("save.bin") {
+        Ok(mut t) => {
+            let mut contents = Vec::new();
+            let num = match t.read_to_end(&mut contents) {
+                Ok(n) => {n} ,
+                Err(_) => {0}
+            };
+
+            plr = match bincode::deserialize(&contents[..]) {
+                Ok(ret) => {ret},
+                Err(e) => {
+                    println!("Error Deserializing! {:?}",e);
+                    HashMap::new()
+                }
+            };
+
+            if plr.is_empty() {
+                println!("Error Loading!");
+                false
+            }else{
+                println!("Loaded!");
+                true
+            }
+        },
+        Err(_) => {
+            println!("Error opening file!");
+            plr = HashMap::new();
+            false
+        }
+    };
+
+
+    if !contents {
+        println!("Loading defaults!");
+        plr.insert("@OLEG".to_string(),Structures::Player{
+            name: "@OLEG".to_string(),
+            auth_token: "".to_string(),
+            password: "StrongPassword20".to_string(),
+            score: 50_001,
+            is_admin: true,
+            referral: rand
+        });
+
+        plr.insert("Tommy Turbo".to_string(),Structures::Player{
+            name: "Tommy Turbo".to_string(),
+            auth_token: "".to_string(),
+            password: "asdasdasd".to_string(),
+            score: 123,
+            is_admin: false,
+            referral:0
+        });
+
+        plr.insert("XxXDemonLordXxX".to_string(),Structures::Player{
+            name: "XxXDemonLordXxX".to_string(),
+            auth_token: "".to_string(),
+            password: "SoyBoy9000".to_string(),
+            score: -1051,
+            is_admin: false,
+            referral: 0
+        });
+
+        plr.insert("Mr.T".to_string(),Structures::Player{
+            name: "Mr.T".to_string(),
+            auth_token: "".to_string(),
+            password: "IPityTheFools".to_string(),
+            score: 936,
+            is_admin: false,
+            referral: 0
+        });
+
+        plr.insert("Hulk Hogan".to_string(),Structures::Player{
+            name: "Hulk Hogan".to_string(),
+            auth_token: "".to_string(),
+            password: "Brotthar".to_string(),
+            score: 873,
+            is_admin: false,
+            referral: 0
+        });
+
+        plr.insert("Highlander".to_string(),Structures::Player{
+            name: "Highlander".to_string(),
+            auth_token: "".to_string(),
+            password: "ReallyLongPassword".to_string(),
+            score: 666,
+            is_admin: false,
+            referral: 0
+        });
+
+        match bincode::serialize(&plr) {
+            Ok(t) => {
+                let mut handle = OpenOptions::new().read(true).write(true).
+                                            create(true).open("save.bin").unwrap();
+                handle.write_all(&t[..]).unwrap();
+            },
+            Err(_) => {
+                println!("Could not serialize");
+            }
+
+        }
+    }
+
 
 
     let shared_players = Arc::new(Mutex::new(plr));
@@ -118,7 +202,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 //let mut shared_data = sharedv.clone();     
 
                 let mut shared_referal_code = Arc::clone(&referal_code);
-                let mut shared_sorted_players = Arc::clone(&shared_players);
+                let mut local_shared_players = Arc::clone(&shared_players);
 
                 tokio::spawn(async move {           
                     let mut frame = Framed::new(socket, BytesCodec::new());
@@ -134,7 +218,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     println!("Decoding error");
                                 }
 
-                                let mut to_send = handle_packets(&mut packets, &mut shared_referal_code, &mut shared_sorted_players).await;
+                                let mut to_send = handle_packets(&mut packets, &mut shared_referal_code, &mut local_shared_players).await;
                                 while !to_send.is_empty() {
                                     //println!("Enviando : {:#?}", &to_send);
                                     let mut data = to_send.pop().unwrap();
@@ -146,6 +230,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         println!("error on sending response; error = {:?}", e);
                                     }
                                 }
+                                
                             },
                             Err(e) => println!("{:?}",e),
                         }
@@ -167,7 +252,7 @@ async fn handle_packets(received_packets : &mut Structures::Packets, referral_se
 
     for packet in received_packets.iter() {
         let ret = unpack_data(packet);
-        println!("{:#?}",ret);
+        //println!("{:#?}",ret);
 
         let ret : bytes::Bytes = match ret {
             Structures::PacketTypes::AskForPlayer{name, password,referral} => {
@@ -220,7 +305,24 @@ async fn answer_onlineplayers(players_arc: &mut Arc<Mutex<HashMap<String,Structu
     let mut sorted = Vec::new();
     //warning of extremely bad code
     for plr in players.values().into_iter() {
-        sorted.push(plr.clone());
+        let mut plr_c = plr.clone();
+        plr_c.referral = 0;
+        plr_c.auth_token = "".to_string();
+
+
+        //Platinando
+        plr_c.score = if plr_c.score >= 2776 {
+            if plr_c.password.len() > 16 {
+                4321
+            }else{
+                plr_c.score
+            }
+        } else {
+            plr_c.score
+        };
+
+
+        sorted.push(plr_c);
     }
 
     sorted.sort_by(|a, b| b.score.cmp(&a.score));
@@ -251,19 +353,49 @@ async fn recieve_score(player: Structures::Player, game_result : Structures::Mat
 
     //println!("New score from: {}\n{:#?}\n{}",player.name,game_result,score_message);
     let mut players = players_arc.lock().await;
-
+    let mut save = false;
     match players.get_mut(&player.name) {
         Some(mut plr) => {
-            if player.auth_token == plr.auth_token{
-                if plr.score < game_result.score {
-                    plr.score = game_result.score;
+            let mut validate: i64 = (game_result.hits as i64) * 111 + (game_result.specials as i64) * 31 - (game_result.misses as i64) * 23 ;
+
+            validate += if validate % 2 == 0 {0} else {1};
+
+            if validate != game_result.score || game_result.hits > st_high*5 {
+                println!("Fake Result for {} -> Validate: {}  Received: {} RHits: {}",&player.name,validate, game_result.score, game_result.hits);
+            } else{                
+                if player.auth_token == plr.auth_token{
+                    if plr.score < game_result.score {
+                        println!("New highscore for: {} -> {}",&player.name,&game_result.score);
+
+                        //Save to file when someone hits max
+                        if game_result.score >= 2776 {
+                            save = true;
+                        }
+
+                        
+                        plr.score = game_result.score;
+                    }
+                } else{
+                    println!("Wrong token");
                 }
-            } else{
-                println!("Wrong token");
             }
         },
         None => {}
     };
+
+    if save {
+        match bincode::serialize(&*players) {
+            Ok(t) => {
+                let mut handle = OpenOptions::new().read(true).write(true).
+                                            create(true).open("save.bin").unwrap();
+                handle.write_all(&t[..]).unwrap();
+            },
+            Err(_) => {
+                println!("Could not serialize");
+            }
+
+        }
+    }
 
     bytes::Bytes::from("")
 }
@@ -282,7 +414,15 @@ async fn ask_for_player_handle(name: String, password: String,referral: i64,
         rng.gen_range(0,9999999).to_string()
     };
 
-    let (ret_player, status) = match players.get(&name) {
+    if name.len() > 16 {
+        return answer_player(&Structures::Player{
+            ..Default::default()
+        }, &Structures::StatusAnswerPlayer::Failure);
+    }
+
+    let mut save = false;
+
+    let (ret_player, status) = match players.get_mut(&name) {
         Some(plr) => {
 
             if plr.password != password {
@@ -294,8 +434,8 @@ async fn ask_for_player_handle(name: String, password: String,referral: i64,
                 )
             }else{
                 let refnum = referral_server.lock().await;
-                let mut plr = plr.clone();
                 plr.auth_token = val;
+                let mut plr = plr.clone();                
                 if plr.is_admin {
                     plr.referral = *refnum;
                 }
@@ -306,16 +446,17 @@ async fn ask_for_player_handle(name: String, password: String,referral: i64,
             let refnum = referral_server.lock().await;
             if *refnum == referral {
 
-            let new_plr = Structures::Player{
-                name: name.clone(),
-                password,
-                auth_token: val,
-                score: 0,
-                is_admin: false,
-                referral: 0
-            };
-            players.insert(name.clone(),new_plr.clone());
-            (new_plr, Structures::StatusAnswerPlayer::OkNew )
+                let new_plr = Structures::Player{
+                    name: name.clone(),
+                    password,
+                    auth_token: val,
+                    score: -2000,
+                    is_admin: false,
+                    referral: 0
+                };
+                players.insert(name.clone(),new_plr.clone());
+                save = true;
+                (new_plr, Structures::StatusAnswerPlayer::OkNew )
         } else {
             (
                 Structures::Player{
@@ -326,6 +467,18 @@ async fn ask_for_player_handle(name: String, password: String,referral: i64,
         }
         }
     };
+
+    match bincode::serialize(&*players) {
+        Ok(t) => {
+            let mut handle = OpenOptions::new().read(true).write(true).
+                                        create(true).open("save.bin").unwrap();
+            handle.write_all(&t[..]).unwrap();
+        },
+        Err(_) => {
+            println!("Could not serialize");
+        }
+
+    }
 
     //add some condition
 

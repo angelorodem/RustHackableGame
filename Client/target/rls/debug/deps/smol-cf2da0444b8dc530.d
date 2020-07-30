@@ -1,0 +1,16 @@
+/home/oleg/git/RustHackableGame/Client/target/rls/debug/deps/smol-cf2da0444b8dc530.rmeta: /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/lib.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/async_io.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/block_on.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/blocking.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/context.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/multitask.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/parking.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/reactor.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/run.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/sys.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/task.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/timer.rs
+
+/home/oleg/git/RustHackableGame/Client/target/rls/debug/deps/smol-cf2da0444b8dc530.d: /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/lib.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/async_io.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/block_on.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/blocking.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/context.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/multitask.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/parking.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/reactor.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/run.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/sys.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/task.rs /home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/timer.rs
+
+/home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/lib.rs:
+/home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/async_io.rs:
+/home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/block_on.rs:
+/home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/blocking.rs:
+/home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/context.rs:
+/home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/multitask.rs:
+/home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/parking.rs:
+/home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/reactor.rs:
+/home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/run.rs:
+/home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/sys.rs:
+/home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/task.rs:
+/home/oleg/.cargo/registry/src/github.com-1ecc6299db9ec823/smol-0.1.18/src/timer.rs:
